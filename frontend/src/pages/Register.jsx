@@ -1,78 +1,137 @@
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
-import { useNavigate } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  // The Validation Rules (Yup)
-  const validationSchema = Yup.object().shape({
-    username: Yup.string().min(3, 'Username must be at least 3 characters').required('Username is required'),
-    email: Yup.string().email('Invalid email address').required('Email is required'),
-    password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-  });
+    // 1. Set up the exact same validation rules as the backend
+    const validationSchema = Yup.object().shape({
+        username: Yup.string().required("Username is required"),
+        password: Yup.string()
+            .matches(
+                /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
+                "Must be 8+ chars, with at least 1 letter and 1 number"
+            )
+            .required("Password is required"),
+        name: Yup.string().required("Full name is required"),
+        email: Yup.string().email("Invalid email").required("Email is required"),
+        gender: Yup.string().required("Please select a gender"),
+        phone_number: Yup.string(),
+        company_university: Yup.string(),
+        primary_language: Yup.string()
+    });
 
-  // The Submit Function (Fetch API)
-  const onSubmit = async (data, { setSubmitting, setFieldError }) => {
-    try {
-      const response = await fetch('http://localhost:3001/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+    const onSubmit = async (values, { setSubmitting, setFieldError }) => {
+        try {
+            const response = await fetch('http://localhost:3001/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(values)
+            });
 
-      const result = await response.json();
+            const result = await response.json();
 
-      if (response.ok) {
-        navigate('/login');
-      } else {
-        setFieldError('email', result.error); 
-      }
-    } catch (error) {
-      console.error('Network error:', error);
-      alert('Could not connect to the server.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+            if (response.ok) {
+                alert("Account created successfully! Please log in.");
+                navigate('/login');
+            } else {
+                // Route backend errors to the specific input fields if possible
+                const errorText = result.error.toLowerCase();
+                if (errorText.includes('email')) {
+                    setFieldError('email', result.error);
+                } else if (errorText.includes('username')) {
+                    setFieldError('username', result.error);
+                } else {
+                    alert(result.error || 'Registration failed');
+                }
+            }
+        } catch (err) {
+            alert('Could not connect to the server.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
-  return (
-    <div className="form-container">
-      <h2>Join StackUnderflow</h2>
-      
-      <Formik
-        initialValues={{ username: '', email: '', password: '' }}
-        validationSchema={validationSchema}
-        onSubmit={onSubmit}
-      >
-        {({ isSubmitting }) => (
-          <Form className="auth-form">
-            <div className="input-group">
-              <label>Username</label>
-              <Field type="text" name="username" placeholder="Coder123" />
-              <ErrorMessage name="username" component="span" className="error-text" />
-            </div>
+    return (
+        <div className="form-container" style={{ marginTop: '3rem', maxWidth: '500px' }}>
+            <h2>Join StackUnderflow</h2>
 
-            <div className="input-group">
-              <label>Email</label>
-              <Field type="email" name="email" placeholder="coder@example.com" />
-              <ErrorMessage name="email" component="span" className="error-text" />
-            </div>
+            <Formik
+                initialValues={{
+                    username: '', password: '', name: '', email: '',
+                    gender: 'Prefer not to say', phone_number: '',
+                    company_university: '', primary_language: ''
+                }}
+                validationSchema={validationSchema}
+                onSubmit={onSubmit}
+            >
+                {({ isSubmitting }) => (
+                    <Form className="auth-form">
+                        
+                        {/* 1. Account Credentials */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                            <div className="input-group">
+                                <label>Username (ID) *</label>
+                                <Field type="text" name="username" />
+                                <ErrorMessage name="username" component="span" className="error-text" />
+                            </div>
+                            <div className="input-group">
+                                <label>Password *</label>
+                                <Field type="password" name="password" />
+                                <ErrorMessage name="password" component="span" className="error-text" />
+                            </div>
+                        </div>
 
-            <div className="input-group">
-              <label>Password</label>
-              <Field type="password" name="password" placeholder="********" />
-              <ErrorMessage name="password" component="span" className="error-text" />
-            </div>
+                        {/* 2. Core Identity */}
+                        <div className="input-group">
+                            <label>Full Name *</label>
+                            <Field type="text" name="name" />
+                            <ErrorMessage name="name" component="span" className="error-text" />
+                        </div>
 
-            <button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Registering...' : 'Register'}
-            </button>
-          </Form>
-        )}
-      </Formik>
-    </div>
-  );
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '15px' }}>
+                            <div className="input-group">
+                                <label>Email Address *</label>
+                                <Field type="email" name="email" />
+                                <ErrorMessage name="email" component="span" className="error-text" />
+                            </div>
+                            <div className="input-group">
+                                <label>Gender *</label>
+                                <Field as="select" name="gender" style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: '#f8fafc', outline: 'none' }}>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                    <option value="Prefer not to say">Prefer not to say</option>
+                                </Field>
+                            </div>
+                        </div>
+
+                        {/* 3. Professional Details */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                            <div className="input-group">
+                                <label>Phone Number</label>
+                                <Field type="tel" name="phone_number" placeholder="+880..." />
+                            </div>
+                            <div className="input-group">
+                                <label>Primary Language</label>
+                                <Field type="text" name="primary_language" placeholder="e.g., JavaScript" />
+                            </div>
+                        </div>
+
+                        <div className="input-group">
+                            <label>Company / University</label>
+                            <Field type="text" name="company_university" placeholder="Where do you study or work?" />
+                        </div>
+
+                        <button type="submit" disabled={isSubmitting} style={{ marginTop: '10px' }}>
+                            {isSubmitting ? 'Creating Account...' : 'Create Account'}
+                        </button>
+                    </Form>
+                )}
+            </Formik>
+        </div>
+    );
 };
 
 export default Register;

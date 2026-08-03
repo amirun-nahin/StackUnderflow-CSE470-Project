@@ -13,7 +13,8 @@ const validateToken = (req, res, next) => {
 
   try {
     // Verify the token using your secret key
-    const validToken = jwt.verify(token, process.env.JWT_SECRET);
+    // 'fallback_secret' is added as backup key for simplifying the process in case of failure
+    const validToken = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
     
     // Attach the decoded user data to the request so other routes can use it
     req.user = validToken; 
