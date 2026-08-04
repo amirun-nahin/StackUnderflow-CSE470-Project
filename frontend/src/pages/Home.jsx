@@ -7,7 +7,7 @@ const Home = ({ activeFeed }) => {
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,17 +24,17 @@ const Home = ({ activeFeed }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      
-      const endpoint = feedType === 'global' 
+
+      const endpoint = feedType === 'global'
         ? `http://localhost:3001/api/posts/feed?page=${pageNum}`
         : `http://localhost:3001/api/posts/feed/following?page=${pageNum}`;
 
       const response = await fetch(endpoint, {
         headers: {
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (!response.ok) throw new Error('Network response was not ok');
       const data = await response.json();
 
@@ -64,9 +64,9 @@ const Home = ({ activeFeed }) => {
   };
 
   return (
-    <div className="home-container">
+    <div className="home-layout">
       {/* LEFT SIDEBAR: Discover / Network */}
-      <aside className="left-sidebar glass-panel">
+      <aside className="left-sidebar panel">
         <h3>My Network</h3>
         <p>Peers list coming soon...</p>
       </aside>
@@ -74,21 +74,21 @@ const Home = ({ activeFeed }) => {
       {/* CENTER: Feed & Post Creation */}
       <main className="feed-column">
         <CreatePost onPostCreated={handlePostCreated} />
-        
+
         <div className="posts-container">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
-          
+
           {posts.length === 0 && !loading && (
              <div className="empty-state">No posts found in this feed.</div>
           )}
         </div>
 
         {posts.length > 0 && (
-          <button 
-            className="load-more-btn" 
-            onClick={loadMore} 
+          <button
+            className="btn btn-outline load-more-btn"
+            onClick={loadMore}
             disabled={loading}
           >
             {loading ? 'Loading...' : 'See More'}
@@ -97,7 +97,7 @@ const Home = ({ activeFeed }) => {
       </main>
 
       {/* RIGHT SIDEBAR: Quizzes / Challenges */}
-      <aside className="right-sidebar glass-panel">
+      <aside className="right-sidebar panel">
         <h3>Trending Challenges</h3>
         <p>Daily Wordle coming soon...</p>
       </aside>

@@ -79,62 +79,55 @@ const PostCard = ({ post, isDetailView = false }) => {
     }
   };
 
-  const getCategoryStyle = (category) => {
+  // Returns a short key used to drive both the card's category gutter color
+  // and the category chip color — same mapping as before, just a shorter
+  // token so it can be reused as a CSS modifier in two places.
+  const getCategoryKey = (category) => {
     switch (category) {
       case "PEER_REVIEW":
-        return "tag-review";
+        return "review";
       case "COLLAB_SLOT":
-        return "tag-collab";
+        return "collab";
       case "MICRO_BOUNTY":
-        return "tag-bounty";
+        return "bounty";
       default:
-        return "tag-normal";
+        return "normal";
     }
   };
 
+  const categoryKey = getCategoryKey(post.category);
+
   return (
     <div
-      className="post-card glass-panel"
-      style={{ cursor: isDetailView ? "default" : "pointer" }}
+      className={`post-card panel post-card--${categoryKey} ${!isDetailView ? "post-card--clickable" : ""}`}
     >
       <div className="post-header">
         {/* Avatar + Author Link */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
-              🧑‍💻
-          </div>
+        <div className="post-header__identity">
+          <div className="avatar-circle avatar-circle--sm">🧑‍💻</div>
           <Link
             to={`/profile/${post.User?.username}`}
             className="post-author"
-            style={{ textDecoration: "none" }}
           >
             {post.User?.username || "Unknown User"}
           </Link>
         </div>
 
-        <div style={{ display: "flex", gap: "8px" }}>
+        <div className="post-header__badges">
           {post.language && post.language !== "General" && (
-            <span
-              style={{
-                padding: "4px 10px",
-                borderRadius: "20px",
-                fontSize: "11px",
-                fontWeight: "700",
-                backgroundColor: "rgba(56, 189, 248, 0.15)",
-                color: "#38bdf8",
-              }}
-            >
-              {post.language}
-            </span>
+            <span className="lang-chip">{post.language}</span>
           )}
 
-          <span className={`post-category ${getCategoryStyle(post.category)}`}>
+          <span className={`category-chip category-chip--${categoryKey}`}>
             {post.category.replace("_", " ")}
           </span>
         </div>
       </div>
 
-      <div className="post-body" onClick={handleCommentClick}>
+      <div
+        className={`post-body ${!isDetailView ? "post-body--clickable" : ""}`}
+        onClick={handleCommentClick}
+      >
         <p className="post-text">{post.text_content}</p>
         {post.code_snippet && (
           <div className="code-block">
@@ -147,22 +140,18 @@ const PostCard = ({ post, isDetailView = false }) => {
 
       <div className="post-footer">
         <button
-          className="vote-btn"
+          className={`stat-btn stat-btn--up ${userVote === "UP" ? "stat-btn--active" : ""}`}
           onClick={() => handleVote("UP")}
-          style={{ color: userVote === "UP" ? "#3b82f6" : "var(--text-muted)" }}
         >
           ⬆️ {upvotes}
         </button>
         <button
-          className="vote-btn"
+          className={`stat-btn stat-btn--down ${userVote === "DOWN" ? "stat-btn--active" : ""}`}
           onClick={() => handleVote("DOWN")}
-          style={{
-            color: userVote === "DOWN" ? "#ef4444" : "var(--text-muted)",
-          }}
         >
           ⬇️ {downvotes}
         </button>
-        <button className="comment-btn" onClick={handleCommentClick}>
+        <button className="stat-btn" onClick={handleCommentClick}>
           💬 {post.Comments?.length || 0} Comments
         </button>
       </div>

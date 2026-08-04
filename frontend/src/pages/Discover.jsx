@@ -35,14 +35,14 @@ const Discover = () => {
             });
             if (response.ok) {
                 const data = await response.json();
-                
+
                 // Update the button state instantly
                 setUsers(users.map(u => {
                     if (u.username === targetUsername) {
                         const currentFollowers = u.Followers || [];
                         return {
                             ...u,
-                            Followers: data.isFollowing 
+                            Followers: data.isFollowing
                                 ? [...currentFollowers, { username: myUsername }]
                                 : currentFollowers.filter(f => f.username !== myUsername)
                         };
@@ -55,39 +55,38 @@ const Discover = () => {
         }
     };
 
-    if (loading) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading...</div>;
+    if (loading) return <div className="loading-state">Loading...</div>;
 
     return (
-        <div className="home-container" style={{ maxWidth: '800px', margin: '40px auto' }}>
-            <h2 style={{ marginBottom: '20px', color: 'var(--text-main)', textAlign: 'center' }}>Discover Network</h2>
-            
-            <div style={{ display: 'grid', gap: '15px' }}>
+        <div className="page-container">
+            <h2 className="discover-heading">Discover Network</h2>
+
+            <div className="discover-list">
                 {users.map(user => {
                     const isFollowing = user.Followers?.some(f => f.username === myUsername);
                     return (
-                        <div key={user.id} className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
+                        <div key={user.id} className="discover-card panel">
+                            <div className="discover-card__identity">
+                                <div className="avatar-circle avatar-circle--md">
                                     🧑‍💻
                                 </div>
                                 <div>
-                                    <Link to={`/profile/${user.username}`} style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-main)', textDecoration: 'none' }}>
+                                    <Link to={`/profile/${user.username}`} className="discover-card__name">
                                         {user.name}
                                     </Link>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>@{user.username} • {user.current_role || 'Developer'}</p>
+                                    <p className="discover-card__meta">@{user.username} • {user.current_role || 'Developer'}</p>
                                 </div>
                             </div>
-                            <button 
-                                className="submit-post-btn" 
+                            <button
+                                className={`btn btn-sm ${isFollowing ? 'btn-outline' : 'btn-primary'}`}
                                 onClick={() => handleFollow(user.username)}
-                                style={{ margin: 0, backgroundColor: isFollowing ? 'transparent' : 'var(--text-accent)', border: isFollowing ? '1px solid var(--text-muted)' : 'none', color: isFollowing ? 'var(--text-main)' : '#fff' }}
                             >
                                 {isFollowing ? 'Unfollow' : 'Follow'}
                             </button>
                         </div>
                     );
                 })}
-                {users.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No other users found.</p>}
+                {users.length === 0 && <p className="empty-state">No other users found.</p>}
             </div>
         </div>
     );

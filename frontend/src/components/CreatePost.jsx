@@ -27,10 +27,10 @@ const CreatePost = ({ onPostCreated }) => {
       });
 
       if (!response.ok) throw new Error('Failed to create post');
-      
+
       const data = await response.json();
       onPostCreated(data);
-      
+
       // Reset form
       setText('');
       setCode('');
@@ -43,16 +43,15 @@ const CreatePost = ({ onPostCreated }) => {
   };
 
   return (
-    <div className="create-post-card glass-panel">
+    <div className="create-post-card panel">
       <form onSubmit={handleSubmit}>
-        
-        {/* NEW: Side-by-side dropdowns */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-            <select 
-              className="category-select" 
-              value={category} 
+
+        {/* Side-by-side dropdowns */}
+        <div className="create-post-selects">
+            <select
+              className="select-input"
+              value={category}
               onChange={(e) => setCategory(e.target.value)}
-              style={{ marginBottom: 0 }}
             >
               <option value="NORMAL">Standard Post</option>
               <option value="PEER_REVIEW">Peer Review Request</option>
@@ -60,11 +59,10 @@ const CreatePost = ({ onPostCreated }) => {
               <option value="MICRO_BOUNTY">Micro-Bounty</option>
             </select>
 
-            <select 
-              className="category-select" 
-              value={language} 
+            <select
+              className="select-input"
+              value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              style={{ marginBottom: 0 }}
             >
               <option value="General">General / No Code</option>
               <option value="JavaScript">JavaScript</option>
@@ -94,15 +92,15 @@ const CreatePost = ({ onPostCreated }) => {
         )}
 
         <div className="create-post-actions">
-          <button 
-            type="button" 
-            className="toggle-code-btn"
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
             onClick={() => setShowCodeInput(!showCodeInput)}
           >
             {showCodeInput ? '- Remove Code' : '+ Add Code Snippet'}
           </button>
-          
-          <button type="submit" className="submit-post-btn" disabled={!text}>
+
+          <button type="submit" className="btn btn-primary" disabled={!text}>
             Post
           </button>
         </div>

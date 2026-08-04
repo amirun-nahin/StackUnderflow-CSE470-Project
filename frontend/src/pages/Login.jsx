@@ -20,7 +20,7 @@ const Login = () => {
 
       if (response.ok) {
         const actualToken = result.token || result.accessToken;
-        
+
         if (!actualToken) {
             setFieldError("email", "Login succeeded, but no token was received.");
             return;
@@ -29,14 +29,14 @@ const Login = () => {
         // Save the correct token
         localStorage.setItem('accessToken', actualToken);
         localStorage.setItem('username', result.username);
-        
+
         // Force a hard browser reload so the Navbar updates instantly
-        window.location.href = '/'; 
+        window.location.href = '/';
       } else {
         // Use Formik's built-in error handler instead of 'setError'
         setFieldError("email", result.error || 'Login failed');
       }
-            
+
     } catch (error) {
       console.error("Network error:", error);
       alert("Could not connect to the server.");
@@ -80,7 +80,7 @@ const Login = () => {
               />
             </div>
 
-            <button type="submit" disabled={isSubmitting}>
+            <button type="submit" className="btn btn-primary btn-block" disabled={isSubmitting}>
               {isSubmitting ? "Logging in..." : "Login"}
             </button>
           </Form>
