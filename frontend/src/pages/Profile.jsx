@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import PostCard from '../components/PostCard'; 
+import PostCard from '../components/PostCard';
 
-// --- THE BULLETPROOF PARSER ---
 const parseTechStack = (tech) => {
     if (!tech) return [];
     if (Array.isArray(tech)) return tech;
@@ -11,7 +10,7 @@ const parseTechStack = (tech) => {
             const parsed = JSON.parse(tech);
             return Array.isArray(parsed) ? parsed : [];
         } catch (e) {
-            return []; 
+            return [];
         }
     }
     return [];
@@ -20,18 +19,18 @@ const parseTechStack = (tech) => {
 const Profile = () => {
     const { username } = useParams();
     const navigate = useNavigate();
-    
+
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({});
-    
+
     // NEW: State to track if the logged-in user is following this profile
     const [isFollowing, setIsFollowing] = useState(false);
 
     const token = localStorage.getItem('accessToken');
     const myUsername = localStorage.getItem('username');
-    const isMyProfile = myUsername === username; 
+    const isMyProfile = myUsername === username;
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -39,19 +38,19 @@ const Profile = () => {
                 const response = await fetch(`http://localhost:3001/api/users/${username}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
-                    
+
                     const safeTechStack = parseTechStack(data.tech_stack);
                     setProfile({ ...data, tech_stack: safeTechStack });
-                    
+
                     // NEW: Check if I am in their Followers array
                     if (data.Followers) {
                         const amIFollowing = data.Followers.some(follower => follower.username === myUsername);
                         setIsFollowing(amIFollowing);
                     }
-                    
+
                     setFormData({
                         bio: data.bio || '',
                         github_profile: data.github_profile || '',
@@ -61,10 +60,10 @@ const Profile = () => {
                         current_role: data.current_role || '',
                         years_of_experience: data.years_of_experience || '',
                         availability_status: data.availability_status || 'Just Browsing',
-                        tech_stack: safeTechStack.join(', ') 
+                        tech_stack: safeTechStack.join(', ')
                     });
                 } else {
-                    navigate('/'); 
+                    navigate('/');
                 }
             } catch (error) {
                 console.error("Failed to fetch profile", error);
@@ -86,7 +85,7 @@ const Profile = () => {
 
         const processedData = {
             ...formData,
-            tech_stack: formData.tech_stack 
+            tech_stack: formData.tech_stack
                 ? formData.tech_stack.split(',').map(tech => tech.trim()).filter(tech => tech)
                 : []
         };
@@ -94,7 +93,7 @@ const Profile = () => {
         try {
             const response = await fetch(`http://localhost:3001/api/users/update`, {
                 method: 'PUT',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
@@ -103,11 +102,11 @@ const Profile = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                
+
                 const safeTechStack = parseTechStack(data.user.tech_stack);
-                
-                setProfile({ ...profile, ...data.user, tech_stack: safeTechStack }); 
-                setIsEditing(false);   
+
+                setProfile({ ...profile, ...data.user, tech_stack: safeTechStack });
+                setIsEditing(false);
             } else {
                 alert("Failed to update profile.");
             }
@@ -127,14 +126,14 @@ const Profile = () => {
             if (response.ok) {
                 const data = await response.json();
                 setIsFollowing(data.isFollowing);
-                
+
                 // Visually update the followers count instantly without refreshing the page
                 setProfile(prev => {
                     const currentFollowers = prev.Followers || [];
                     return {
                         ...prev,
-                        Followers: data.isFollowing 
-                            ? [...currentFollowers, { username: myUsername }] 
+                        Followers: data.isFollowing
+                            ? [...currentFollowers, { username: myUsername }]
                             : currentFollowers.filter(f => f.username !== myUsername)
                     };
                 });
@@ -144,109 +143,107 @@ const Profile = () => {
         }
     };
 
-    if (loading) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading...</div>;
+    if (loading) return <div className="loading-state">Loading...</div>;
     if (!profile) return null;
 
-    const getStatusColor = (status) => {
-        if (status === 'Open to Collaborate') return '#10b981';
-        if (status === 'Looking for Work') return '#3b82f6';
-        if (status === 'Busy') return '#ef4444'; 
-        return '#64748b'; 
+    // Same status -> presentation mapping as before, just returning a short
+    // key used to pick a CSS modifier class instead of a raw color.
+    const getStatusKey = (status) => {
+        if (status === 'Open to Collaborate') return 'open';
+        if (status === 'Looking for Work') return 'looking';
+        if (status === 'Busy') return 'busy';
+        return 'browsing';
     };
 
     return (
-        <div className="home-container" style={{ display: 'block', maxWidth: '800px', margin: '40px auto' }}>
-            
-            <div className="glass-panel" style={{ textAlign: 'center', padding: '40px', marginBottom: '20px', position: 'relative' }}>
-                
+        <div className="page-container">
+
+            <div className="profile-header panel">
+
                 {profile.availability_status && (
-                    <div style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '12px', fontWeight: 'bold', padding: '6px 12px', borderRadius: '20px', border: `1px solid ${getStatusColor(profile.availability_status)}`, color: getStatusColor(profile.availability_status) }}>
+                    <div className={`profile-status-badge profile-status-badge--${getStatusKey(profile.availability_status)}`}>
                         ● {profile.availability_status}
                     </div>
                 )}
 
-                <div style={{ 
-                    width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', 
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px', fontSize: '40px' 
-                }}>
+                <div className="avatar-circle avatar-circle--lg">
                     {profile.gender === 'Female' ? '👩‍💻' : profile.gender === 'Male' ? '👨‍💻' : '🧑‍💻'}
                 </div>
-                
-                <h1 style={{ marginBottom: '5px' }}>{profile.name}</h1>
-                <p style={{ color: 'var(--text-accent)', fontWeight: 'bold', marginBottom: '5px' }}>
+
+                <h1 className="profile-name">{profile.name}</h1>
+                <p className="profile-role">
                     {profile.current_role || 'Developer'} {profile.years_of_experience ? `• ${profile.years_of_experience} YOE` : ''}
                 </p>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '15px' }}>@{profile.username}</p>
-                
+                <p className="profile-handle">@{profile.username}</p>
+
                 {/* NEW: Network Stats (Followers / Following) */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '25px', padding: '15px 0', borderTop: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="profile-stats">
                     <div>
-                        <span style={{ display: 'block', fontSize: '20px', fontWeight: 'bold', color: 'var(--text-main)' }}>{profile.Followers?.length || 0}</span>
-                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Followers</span>
+                        <span className="profile-stat__value">{profile.Followers?.length || 0}</span>
+                        <span className="profile-stat__label">Followers</span>
                     </div>
                     <div>
-                        <span style={{ display: 'block', fontSize: '20px', fontWeight: 'bold', color: 'var(--text-main)' }}>{profile.Following?.length || 0}</span>
-                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Following</span>
+                        <span className="profile-stat__value">{profile.Following?.length || 0}</span>
+                        <span className="profile-stat__label">Following</span>
                     </div>
                 </div>
 
                 {profile.tech_stack && profile.tech_stack.length > 0 && !isEditing && (
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                    <div className="profile-chips">
                         {profile.tech_stack.map((tech, index) => (
-                            <span key={index} style={{ padding: '5px 12px', borderRadius: '4px', backgroundColor: 'rgba(255,255,255,0.05)', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <span key={index} className="profile-tech-chip">
                                 {tech}
                             </span>
                         ))}
                     </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap', marginBottom: '20px' }}>
-                    {profile.company_university && <span className="tag-normal">🏢 {profile.company_university}</span>}
-                    {profile.primary_language && <span className="tag-review">💻 {profile.primary_language}</span>}
-                    {profile.field_of_interest && !isEditing && <span className="tag-bounty">🎯 {profile.field_of_interest}</span>}
+                <div className="profile-chips">
+                    {profile.company_university && <span className="category-chip category-chip--normal">🏢 {profile.company_university}</span>}
+                    {profile.primary_language && <span className="category-chip category-chip--review">💻 {profile.primary_language}</span>}
+                    {profile.field_of_interest && !isEditing && <span className="category-chip category-chip--bounty">🎯 {profile.field_of_interest}</span>}
                 </div>
 
                 {/* NEW: The Smart Button Zone (Edit vs Follow) */}
                 {isMyProfile ? (
-                    !isEditing && <button className="submit-post-btn" onClick={() => setIsEditing(true)}>Edit Profile</button>
+                    !isEditing && <button className="btn btn-primary" onClick={() => setIsEditing(true)}>Edit Profile</button>
                 ) : (
-                    <button 
-                        className="submit-post-btn" 
+                    <button
+                        className={`btn ${isFollowing ? 'btn-outline' : 'btn-primary'}`}
                         onClick={handleFollowToggle}
-                        style={{ backgroundColor: isFollowing ? 'transparent' : 'var(--text-accent)', border: isFollowing ? '1px solid var(--text-muted)' : 'none', color: isFollowing ? 'var(--text-main)' : '#fff' }}
                     >
                         {isFollowing ? 'Unfollow' : 'Follow'}
                     </button>
                 )}
             </div>
 
-            <div className="glass-panel" style={{ padding: '30px', marginBottom: '30px' }}>
+            <div className="profile-body panel">
                 {!isEditing ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div className="profile-view">
                         <div>
-                            <h3 style={{ color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', marginBottom: '5px' }}>Bio</h3>
-                            <p>{profile.bio || "This user hasn't written a bio yet."}</p>
+                            <h3 className="profile-field__label">Bio</h3>
+                            <p className="profile-field__value">{profile.bio || "This user hasn't written a bio yet."}</p>
                         </div>
-                        
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+
+                        <div className="profile-field-grid">
                             <div>
-                                <h3 style={{ color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', marginBottom: '5px' }}>GitHub</h3>
+                                <h3 className="profile-field__label">GitHub</h3>
                                 {profile.github_profile ? (
-                                    <a href={profile.github_profile} target="_blank" rel="noreferrer" style={{ color: 'var(--text-accent)' }}>{profile.github_profile}</a>
+                                    <a href={profile.github_profile} target="_blank" rel="noreferrer">{profile.github_profile}</a>
                                 ) : (
-                                    <p style={{ color: 'var(--text-muted)' }}>Not linked</p>
+                                    <p className="profile-field__value profile-field__value--muted">Not linked</p>
                                 )}
                             </div>
                             <div>
-                                <h3 style={{ color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', marginBottom: '5px' }}>Location</h3>
-                                <p>{profile.address || "Not specified"}</p>
+                                <h3 className="profile-field__label">Location</h3>
+                                <p className="profile-field__value">{profile.address || "Not specified"}</p>
                             </div>
                         </div>
                     </div>
                 ) : (
-                    <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <form onSubmit={handleSave} className="profile-edit-form">
+
+                        <div className="profile-field-grid">
                             <div className="input-group">
                                 <label>Current Role</label>
                                 <input type="text" name="current_role" value={formData.current_role} onChange={handleChange} placeholder="e.g. Full-Stack Engineer" />
@@ -257,14 +254,14 @@ const Profile = () => {
                             </div>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div className="profile-field-grid">
                             <div className="input-group">
                                 <label>Tech Stack (Comma Separated)</label>
                                 <input type="text" name="tech_stack" value={formData.tech_stack} onChange={handleChange} placeholder="React, Node.js, Python" />
                             </div>
                             <div className="input-group">
                                 <label>Availability Status</label>
-                                <select name="availability_status" value={formData.availability_status} onChange={handleChange} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: '#f8fafc' }}>
+                                <select name="availability_status" value={formData.availability_status} onChange={handleChange} className="select-input">
                                     <option value="Open to Collaborate">Open to Collaborate</option>
                                     <option value="Looking for Work">Looking for Work</option>
                                     <option value="Busy">Busy</option>
@@ -275,13 +272,12 @@ const Profile = () => {
 
                         <div className="input-group">
                             <label>Bio</label>
-                            <textarea 
-                                name="bio" value={formData.bio} onChange={handleChange} 
-                                style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '10px', borderRadius: '8px', minHeight: '80px' }}
+                            <textarea
+                                name="bio" value={formData.bio} onChange={handleChange}
                             />
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div className="profile-field-grid">
                             <div className="input-group">
                                 <label>Field of Interest</label>
                                 <input type="text" name="field_of_interest" value={formData.field_of_interest} onChange={handleChange} placeholder="e.g., Machine Learning" />
@@ -300,15 +296,15 @@ const Profile = () => {
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end', marginTop: '10px' }}>
-                            <button type="button" onClick={() => setIsEditing(false)} style={{ background: 'transparent', color: 'var(--text-main)', border: '1px solid var(--text-muted)', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
-                            <button type="submit" className="submit-post-btn" style={{ margin: 0 }}>Save Profile</button>
+                        <div className="profile-edit-actions">
+                            <button type="button" onClick={() => setIsEditing(false)} className="btn btn-outline">Cancel</button>
+                            <button type="submit" className="btn btn-primary">Save Profile</button>
                         </div>
                     </form>
                 )}
             </div>
 
-            <h3 style={{ marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>
+            <h3 className="profile-activity-heading">
                 Recent Activity
             </h3>
             <div className="posts-container">
@@ -317,7 +313,7 @@ const Profile = () => {
                         <PostCard key={post.id} post={{ ...post, User: { username: profile.username } }} />
                     ))
                 ) : (
-                    <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>
+                    <p className="empty-state">
                         This user hasn't posted anything yet.
                     </p>
                 )}

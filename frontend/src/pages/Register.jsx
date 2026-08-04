@@ -54,7 +54,7 @@ const Register = () => {
     };
 
     return (
-        <div className="form-container" style={{ marginTop: '3rem', maxWidth: '500px' }}>
+        <div className="form-container form-container--wide">
             <h2>Join StackUnderflow</h2>
 
             <Formik
@@ -68,9 +68,9 @@ const Register = () => {
             >
                 {({ isSubmitting }) => (
                     <Form className="auth-form">
-                        
+
                         {/* 1. Account Credentials */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                        <div className="form-row-2">
                             <div className="input-group">
                                 <label>Username (ID) *</label>
                                 <Field type="text" name="username" />
@@ -90,7 +90,7 @@ const Register = () => {
                             <ErrorMessage name="name" component="span" className="error-text" />
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '15px' }}>
+                        <div className="form-row-2">
                             <div className="input-group">
                                 <label>Email Address *</label>
                                 <Field type="email" name="email" />
@@ -98,7 +98,7 @@ const Register = () => {
                             </div>
                             <div className="input-group">
                                 <label>Gender *</label>
-                                <Field as="select" name="gender" style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: '#f8fafc', outline: 'none' }}>
+                                <Field as="select" name="gender" className="select-input">
                                     <option value="Male">Male</option>
                                     <option value="Female">Female</option>
                                     <option value="Other">Other</option>
@@ -108,7 +108,7 @@ const Register = () => {
                         </div>
 
                         {/* 3. Professional Details */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                        <div className="form-row-2">
                             <div className="input-group">
                                 <label>Phone Number</label>
                                 <Field type="tel" name="phone_number" placeholder="+880..." />
@@ -124,7 +124,7 @@ const Register = () => {
                             <Field type="text" name="company_university" placeholder="Where do you study or work?" />
                         </div>
 
-                        <button type="submit" disabled={isSubmitting} style={{ marginTop: '10px' }}>
+                        <button type="submit" className="btn btn-primary btn-block" disabled={isSubmitting}>
                             {isSubmitting ? 'Creating Account...' : 'Create Account'}
                         </button>
                     </Form>

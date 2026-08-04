@@ -1,17 +1,11 @@
 import { useState } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Link,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PostDetail from "./pages/PostDetail";
 import Profile from "./pages/Profile";
-import Discover from "./pages/Discover"; // <-- NEW IMPORT
+import Discover from "./pages/Discover";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("accessToken");
@@ -32,82 +26,32 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
   };
 
   return (
-    <nav
-      className="navbar"
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "15px 30px",
-        backgroundColor: "rgba(255, 255, 255, 0.8)",
-        backdropFilter: "blur(10px)",
-        borderBottom: "1px solid #e2e8f0",
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "30px" }}>
-        <Link
-          to="/"
-          style={{
-            fontSize: "20px",
-            fontWeight: "800",
-            color: "#0f172a",
-            textDecoration: "none",
-          }}
-        >
-          StackUnderflow
+    <nav className="navbar">
+      <div className="navbar__left">
+        <Link to="/" className="navbar__brand">
+          stackUnderflow
         </Link>
 
         {token && (
-          <div style={{ display: "flex", gap: "15px" }}>
+          <div className="navbar__tabs">
             <Link
               to="/"
               onClick={() => setActiveFeed("global")}
-              style={{
-                textDecoration: "none",
-                fontWeight: "600",
-                color: activeFeed === "global" ? "#3b82f6" : "#64748b",
-                borderBottom:
-                  activeFeed === "global"
-                    ? "2px solid #3b82f6"
-                    : "2px solid transparent",
-                paddingBottom: "4px",
-              }}
+              className={`navbar__tab ${activeFeed === "global" ? "navbar__tab--active" : ""}`}
             >
               Global
             </Link>
             <Link
               to="/"
               onClick={() => setActiveFeed("following")}
-              style={{
-                textDecoration: "none",
-                fontWeight: "600",
-                color: activeFeed === "following" ? "#3b82f6" : "#64748b",
-                borderBottom:
-                  activeFeed === "following"
-                    ? "2px solid #3b82f6"
-                    : "2px solid transparent",
-                paddingBottom: "4px",
-              }}
+              className={`navbar__tab ${activeFeed === "following" ? "navbar__tab--active" : ""}`}
             >
               Following
             </Link>
-            {/* NEW DISCOVER TAB */}
             <Link
               to="/discover"
               onClick={() => setActiveFeed("discover")}
-              style={{
-                textDecoration: "none",
-                fontWeight: "600",
-                color: activeFeed === "discover" ? "#3b82f6" : "#64748b",
-                borderBottom:
-                  activeFeed === "discover"
-                    ? "2px solid #3b82f6"
-                    : "2px solid transparent",
-                paddingBottom: "4px",
-              }}
+              className={`navbar__tab ${activeFeed === "discover" ? "navbar__tab--active" : ""}`}
             >
               Discover
             </Link>
@@ -115,26 +59,22 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
         )}
       </div>
 
-      <div>
+      <div className="navbar__right">
         {token ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-            <Link
-              to={`/profile/${myUsername}`}
-              className="nav-link"
-              style={{ fontWeight: "600" }}
-            >
+          <>
+            <Link to={`/profile/${myUsername}`} className="navbar__profile-link">
               My Profile
             </Link>
-            <button onClick={handleLogout} className="logout-btn">
+            <button onClick={handleLogout} className="btn btn-outline btn-sm">
               Logout
             </button>
-          </div>
+          </>
         ) : (
-          <div style={{ display: "flex", gap: "15px" }}>
-            <Link to="/login" className="nav-link">
+          <div className="navbar__auth-links">
+            <Link to="/login" className="navbar__auth-link">
               Login
             </Link>
-            <Link to="/register" className="nav-link">
+            <Link to="/register" className="navbar__auth-link">
               Register
             </Link>
           </div>

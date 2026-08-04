@@ -7,7 +7,7 @@ const PostDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [post, setPost] = useState(null);
-    const [commentTree, setCommentTree] = useState([]); 
+    const [commentTree, setCommentTree] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [loading, setLoading] = useState(true);
 
@@ -73,10 +73,10 @@ const PostDetail = () => {
             if (response.ok) {
                 const createdComment = await response.json();
                 const commentWithUser = { ...createdComment, User: { username: myUsername }, Replies: [] };
-                
+
                 const currentComments = post.Comments || [];
                 const newFlatList = [...currentComments, commentWithUser];
-                
+
                 setPost({ ...post, Comments: newFlatList });
                 setCommentTree(buildTree(newFlatList));
                 setNewComment('');
@@ -99,19 +99,19 @@ const PostDetail = () => {
             if (response.ok) {
                 const createdReply = await response.json();
                 const replyWithUser = { ...createdReply, User: { username: myUsername }, Replies: [] };
-                
+
                 const currentComments = post.Comments || [];
                 const newFlatList = [...currentComments, replyWithUser];
-                
-                setPost({ ...post, Comments: newFlatList }); 
-                setCommentTree(buildTree(newFlatList));      
+
+                setPost({ ...post, Comments: newFlatList });
+                setCommentTree(buildTree(newFlatList));
             }
         } catch (error) {
             console.error("Failed to post reply", error);
         }
     };
 
-    // NEW: Handle Soft Deletion
+    // Handle Soft Deletion
     const handleDeleteComment = async (commentId) => {
         if (!window.confirm("Are you sure you want to delete this comment?")) return;
 
@@ -124,10 +124,10 @@ const PostDetail = () => {
             if (response.ok) {
                 // Optimistically update the UI without refreshing
                 const currentComments = post.Comments || [];
-                const newFlatList = currentComments.map(c => 
+                const newFlatList = currentComments.map(c =>
                     c.id === commentId ? { ...c, text_content: '[The comment is deleted]', is_deleted: true } : c
                 );
-                
+
                 setPost({ ...post, Comments: newFlatList });
                 setCommentTree(buildTree(newFlatList));
             }
@@ -136,37 +136,36 @@ const PostDetail = () => {
         }
     };
 
-    if (loading) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading...</div>;
+    if (loading) return <div className="loading-state">Loading...</div>;
     if (!post) return null;
 
     return (
-        <div className="home-container" style={{ display: 'block', maxWidth: '800px', margin: '30px auto' }}>
-            <button onClick={() => navigate(-1)} style={{ marginBottom: '20px', cursor: 'pointer', background: 'none', border: 'none', color: '#38bdf8', fontWeight: 'bold' }}>
+        <div className="page-container">
+            <button onClick={() => navigate(-1)} className="btn-ghost back-link">
                 &larr; Back to Feed
             </button>
 
             <PostCard post={post} isDetailView={true} />
 
-            <div className="comments-section glass-panel" style={{ marginTop: '20px' }}>
+            <div className="comments-section panel">
                 <h3>Discussion</h3>
-                
-                <form onSubmit={handleAddComment} style={{ display: 'flex', gap: '10px', marginBottom: '30px', marginTop: '15px' }}>
-                    <input 
-                        type="text" 
+
+                <form onSubmit={handleAddComment} className="comment-form-row">
+                    <input
+                        type="text"
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Add a new top-level comment..." 
-                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#f8fafc' }}
+                        placeholder="Add a new top-level comment..."
                     />
-                    <button type="submit" className="submit-post-btn" style={{ padding: '10px 20px' }}>Post</button>
+                    <button type="submit" className="btn btn-primary">Post</button>
                 </form>
 
                 {commentTree.length > 0 ? (
-                    <div className="comments-list" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div className="comments-list">
                         {commentTree.map(comment => (
-                            <CommentNode 
-                                key={comment.id} 
-                                comment={comment} 
+                            <CommentNode
+                                key={comment.id}
+                                comment={comment}
                                 handleAddReply={handleAddReply}
                                 handleDeleteComment={handleDeleteComment} // Passed down
                                 myUserId={myUserId}                       // Passed down
@@ -174,7 +173,7 @@ const PostDetail = () => {
                         ))}
                     </div>
                 ) : (
-                    <p style={{ color: '#94a3b8' }}>No comments yet. Be the first!</p>
+                    <p className="empty-state">No comments yet. Be the first!</p>
                 )}
             </div>
         </div>
