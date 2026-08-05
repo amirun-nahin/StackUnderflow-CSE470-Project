@@ -7,6 +7,8 @@ import PostDetail from "./pages/PostDetail";
 import Profile from "./pages/Profile";
 import Discover from "./pages/Discover";
 import BountyDetail from "./pages/BountyDetail";
+import CompetitionDetail from "./pages/CompetitionDetail";   // ADD
+import HostCompetition from "./pages/HostCompetition";       // ADD
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("accessToken");
@@ -131,6 +133,22 @@ function App() {
           element={
             <ProtectedRoute>
               <BountyDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/competition/:id"
+          element={
+            <ProtectedRoute>
+              <CompetitionDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/host-competition"
+          element={
+            <ProtectedRoute>
+              <HostCompetition />
             </ProtectedRoute>
           }
         />

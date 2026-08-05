@@ -5,6 +5,8 @@ const User = require('../models/User');
 const Post = require('../models/Post');
 const BountyEnrollment = require('../models/BountyEnrollment');
 const BountySubmission = require('../models/BountySubmission');
+const Competition = require('../models/Competition');
+const CompetitionSubmission = require('../models/CompetitionSubmission');
 const { validateToken } = require('../middlewares/AuthMiddleware');
 
 
@@ -39,6 +41,14 @@ router.get('/:username', validateToken, async (req, res) => {
                 {
                     model: BountySubmission,
                     include: [{ model: Post, attributes: ['id', 'text_content'] }]
+                },
+                {
+                    model: Competition,
+                    attributes: ['id', 'title', 'language', 'start_time', 'duration_minutes']
+                },
+                {
+                    model: CompetitionSubmission,
+                    include: [{ model: Competition, attributes: ['id', 'title', 'language'] }]
                 }
             ],
             

@@ -8,6 +8,8 @@ const Comment = require('./models/Comment');
 const Vote = require('./models/Vote');
 const BountyEnrollment = require('./models/BountyEnrollment');
 const BountySubmission = require('./models/BountySubmission');
+const Competition = require('./models/Competition');
+const CompetitionSubmission = require('./models/CompetitionSubmission');
 //const bountyRoutes = require('./routes/bounty');
 
 const app = express();
@@ -31,7 +33,8 @@ const userRoutes = require('./routes/users')
 app.use('/api/users', require('./routes/users'));
 const bountyRoutes = require('./routes/bounty');
 app.use('/api/bounty', bountyRoutes);
-
+const competitionRoutes = require('./routes/competition');
+app.use('/api/competition', competitionRoutes);
 // Fallback Route
 app.get('/', (req, res) => {
     res.send("StackUnderflow API is running!");
@@ -71,7 +74,12 @@ User.hasMany(BountySubmission);
 BountySubmission.belongsTo(User);
 Post.hasMany(BountySubmission);
 BountySubmission.belongsTo(Post);
-
+User.hasMany(Competition);
+Competition.belongsTo(User);
+User.hasMany(CompetitionSubmission);
+CompetitionSubmission.belongsTo(User);
+Competition.hasMany(CompetitionSubmission);
+CompetitionSubmission.belongsTo(Competition);
 // Database Sync and Server Start
 sequelize.sync().then(() => {
     console.log('Database connected successfully!');

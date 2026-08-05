@@ -343,6 +343,9 @@ const Profile = () => {
             <h3 className="profile-activity-heading">
                 Recent Activity
             </h3>
+            <h3 className="profile-activity-heading">
+                Recent Activity
+            </h3>
             <div className="posts-container">
                 {profile.Posts && profile.Posts.length > 0 ? (
                     profile.Posts.map(post => (
