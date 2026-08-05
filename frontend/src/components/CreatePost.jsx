@@ -6,6 +6,9 @@ const CreatePost = ({ onPostCreated }) => {
   const [category, setCategory] = useState('NORMAL');
   const [language, setLanguage] = useState('General'); // <-- NEW STATE
   const [showCodeInput, setShowCodeInput] = useState(false);
+  const [bountyRewardPoints, setBountyRewardPoints] = useState('');   // ADD
+  const [bountyDeadline, setBountyDeadline] = useState(''); 
+  const isBounty = category === 'MICRO_BOUNTY';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,7 +25,9 @@ const CreatePost = ({ onPostCreated }) => {
           text_content: text,
           code_snippet: showCodeInput ? code : null,
           category: category,
-          language: language // <-- SENDING TO BACKEND
+          language: language, // <-- SENDING TO BACKEND
+          ...(isBounty && bountyRewardPoints ? { bounty_reward_points: Number(bountyRewardPoints) } : {}),
+          ...(isBounty && bountyDeadline ? { bounty_deadline: bountyDeadline } : {})
         })
       });
 
@@ -37,6 +42,8 @@ const CreatePost = ({ onPostCreated }) => {
       setShowCodeInput(false);
       setCategory('NORMAL');
       setLanguage('General');
+      setBountyRewardPoints('');
+      setBountyDeadline('');
     } catch (error) {
       console.error("Error creating post:", error);
     }
@@ -73,10 +80,33 @@ const CreatePost = ({ onPostCreated }) => {
               <option value="SQL">SQL</option>
             </select>
         </div>
-
+        {isBounty && (
+          <div className="create-post-selects">
+            <div className="input-group">
+              <label>Reward Points</label>
+              <input
+                type="number"
+                min="0"
+                className="select-input"
+                placeholder="e.g. 100"
+                value={bountyRewardPoints}
+                onChange={(e) => setBountyRewardPoints(e.target.value)}
+              />
+            </div>
+            <div className="input-group">
+              <label>Deadline</label>
+              <input
+                type="date"
+                className="select-input"
+                value={bountyDeadline}
+                onChange={(e) => setBountyDeadline(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
         <textarea
           className="post-textarea"
-          placeholder="What are you working on?"
+          placeholder={isBounty ? "Describe the bounty challenge..." : "What is the challenge?"}
           value={text}
           onChange={(e) => setText(e.target.value)}
           required

@@ -3,6 +3,8 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Post = require('../models/Post');
+const BountyEnrollment = require('../models/BountyEnrollment');
+const BountySubmission = require('../models/BountySubmission');
 const { validateToken } = require('../middlewares/AuthMiddleware');
 
 
@@ -29,7 +31,15 @@ router.get('/:username', validateToken, async (req, res) => {
             include: [
                 { model: Post },
                 { model: User, as: 'Followers', attributes: ['id', 'username'] },
-                { model: User, as: 'Following', attributes: ['id', 'username'] }
+                { model: User, as: 'Following', attributes: ['id', 'username'] },
+                {
+                    model: BountyEnrollment,
+                    include: [{ model: Post, attributes: ['id', 'text_content', 'category', 'bounty_status'] }]
+                },
+                {
+                    model: BountySubmission,
+                    include: [{ model: Post, attributes: ['id', 'text_content'] }]
+                }
             ],
             
             // Properly order the included posts from newest to oldest

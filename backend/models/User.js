@@ -85,7 +85,12 @@ const User = sequelize.define('User', {
         type: DataTypes.ENUM('Open to Collaborate', 'Looking for Work', 'Busy', 'Just Browsing'),
         allowNull: true,
         defaultValue: 'Just Browsing'
-    }
+    },
+    points: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    }    
 });
 
 module.exports = User;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import PostCard from '../components/PostCard';
 
 const parseTechStack = (tech) => {
@@ -186,6 +186,10 @@ const Profile = () => {
                         <span className="profile-stat__value">{profile.Following?.length || 0}</span>
                         <span className="profile-stat__label">Following</span>
                     </div>
+                    <div>                                                                      {/* ADD */}
+                        <span className="profile-stat__value">{profile.points || 0}</span>       {/* ADD */}
+                        <span className="profile-stat__label">Bounty Points</span>                {/* ADD */}
+                    </div>
                 </div>
 
                 {profile.tech_stack && profile.tech_stack.length > 0 && !isEditing && (
@@ -303,7 +307,39 @@ const Profile = () => {
                     </form>
                 )}
             </div>
-
+            <h3 className="profile-activity-heading">
+                Bounty Activity
+            </h3>
+            <div className="posts-container">
+                {(profile.BountyEnrollments?.length > 0 || profile.BountySubmissions?.length > 0) ? (
+                    <>
+                        {profile.BountyEnrollments?.map(enrollment => {
+                            const submission = profile.BountySubmissions?.find(
+                                s => s.Post?.id === enrollment.Post?.id
+                            );
+                            return (
+                                <div key={`enrollment-${enrollment.id}`} className="bounty-card panel">
+                                    <Link to={`/bounty/${enrollment.Post?.id}`} className="bounty-card__title">
+                                        {enrollment.Post?.text_content}
+                                    </Link>
+                                    <div className="bounty-card__meta">
+                                        <span className="category-chip category-chip--bounty">
+                                            {submission ? `Submitted • ${submission.status}` : enrollment.status || 'Enrolled'}
+                                        </span>
+                                        {submission?.status === 'REVIEWED' && (
+                                            <span className="bounty-meta-chip bounty-meta-chip--reward">
+                                                🏆 {submission.marks} pts
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </>
+                ) : (
+                    <p className="empty-state">No bounty activity yet.</p>
+                )}
+            </div>
             <h3 className="profile-activity-heading">
                 Recent Activity
             </h3>

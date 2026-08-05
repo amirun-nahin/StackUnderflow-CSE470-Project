@@ -75,7 +75,11 @@ const PostCard = ({ post, isDetailView = false }) => {
 
   const handleCommentClick = () => {
     if (!isDetailView) {
-      navigate(`/post/${post.id}`);
+      if (post.category === "MICRO_BOUNTY") {   // ADD
+        navigate(`/bounty/${post.id}`);           // ADD
+      } else {                                    // ADD
+        navigate(`/post/${post.id}`);
+      }                                            // ADD
     }
   };
 
@@ -129,6 +133,23 @@ const PostCard = ({ post, isDetailView = false }) => {
         onClick={handleCommentClick}
       >
         <p className="post-text">{post.text_content}</p>
+        {post.category === "MICRO_BOUNTY" && (
+          <div className="bounty-meta-row">
+            {typeof post.bounty_reward_points === "number" && (
+              <span className="bounty-meta-chip bounty-meta-chip--reward">
+                🏆 {post.bounty_reward_points} pts
+              </span>
+            )}
+            {post.bounty_deadline && (
+              <span className="bounty-meta-chip">
+                ⏳ Due {new Date(post.bounty_deadline).toLocaleDateString()}
+              </span>
+            )}
+            {post.bounty_status && (
+              <span className="bounty-meta-chip">{post.bounty_status}</span>
+            )}
+          </div>
+        )}
         {post.code_snippet && (
           <div className="code-block">
             <pre>
