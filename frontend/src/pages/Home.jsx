@@ -3,6 +3,7 @@ import PostCard from '../components/PostCard';
 import CreatePost from '../components/CreatePost';
 import { useNavigate } from 'react-router-dom';
 import BountyBoard from '../components/BountyBoard';
+import CompetitionBoard from '../components/CompetitionBoard';   // ADD
 
 const Home = ({ activeFeed }) => {
   const [posts, setPosts] = useState([]);
@@ -70,6 +71,7 @@ const Home = ({ activeFeed }) => {
       <aside className="left-sidebar panel">
         <h3>My Network</h3>
         <p>Peers list coming soon...</p>
+        <CompetitionBoard />   {/* ADD */}
       </aside>
 
       {/* CENTER: Feed & Post Creation */}
