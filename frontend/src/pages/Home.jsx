@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import PostCard from '../components/PostCard';
 import CreatePost from '../components/CreatePost';
 import { useNavigate } from 'react-router-dom';
+import BountyBoard from '../components/BountyBoard';
 
 const Home = ({ activeFeed }) => {
   const [posts, setPosts] = useState([]);
@@ -100,6 +101,8 @@ const Home = ({ activeFeed }) => {
       <aside className="right-sidebar panel">
         <h3>Trending Challenges</h3>
         <p>Daily Wordle coming soon...</p>
+        <h3 className="bounty-board-heading">Micro-Bounty Board</h3>   {/* ADD */}
+        <BountyBoard />
       </aside>
     </div>
   );

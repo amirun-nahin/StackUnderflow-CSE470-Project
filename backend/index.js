@@ -6,6 +6,9 @@ const User = require('./models/User');
 const Post = require('./models/Post');
 const Comment = require('./models/Comment');
 const Vote = require('./models/Vote');
+const BountyEnrollment = require('./models/BountyEnrollment');
+const BountySubmission = require('./models/BountySubmission');
+//const bountyRoutes = require('./routes/bounty');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -26,6 +29,8 @@ app.use('/api/posts', postRoutes);
 
 const userRoutes = require('./routes/users')
 app.use('/api/users', require('./routes/users'));
+const bountyRoutes = require('./routes/bounty');
+app.use('/api/bounty', bountyRoutes);
 
 // Fallback Route
 app.get('/', (req, res) => {
@@ -57,6 +62,15 @@ Vote.belongsTo(Post);
 User.belongsToMany(User, { as: 'Followers', through: 'UserFollowers', foreignKey: 'followingId', otherKey: 'followerId' });
 User.belongsToMany(User, { as: 'Following', through: 'UserFollowers', foreignKey: 'followerId', otherKey: 'followingId' });
 
+User.hasMany(BountyEnrollment);
+BountyEnrollment.belongsTo(User);
+Post.hasMany(BountyEnrollment);
+BountyEnrollment.belongsTo(Post);
+
+User.hasMany(BountySubmission);
+BountySubmission.belongsTo(User);
+Post.hasMany(BountySubmission);
+BountySubmission.belongsTo(Post);
 
 // Database Sync and Server Start
 sequelize.sync().then(() => {

@@ -19,7 +19,20 @@ const Post = sequelize.define('Post', {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: 'General'
-    }
+    },
+    bounty_reward_points: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
+    bounty_deadline: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+    bounty_status: {
+        type: DataTypes.ENUM('OPEN', 'CLOSED'),
+        allowNull: true,
+        defaultValue: 'OPEN'
+    }    
 });
 
 module.exports = Post;

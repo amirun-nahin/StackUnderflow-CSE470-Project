@@ -6,6 +6,7 @@ import Register from "./pages/Register";
 import PostDetail from "./pages/PostDetail";
 import Profile from "./pages/Profile";
 import Discover from "./pages/Discover";
+import BountyDetail from "./pages/BountyDetail";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("accessToken");
@@ -122,6 +123,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bounty/:id"
+          element={
+            <ProtectedRoute>
+              <BountyDetail />
             </ProtectedRoute>
           }
         />
