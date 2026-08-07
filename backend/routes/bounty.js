@@ -64,6 +64,10 @@ router.post('/:postId/enroll', validateToken, async (req, res) => {
         const post = await getBountyPostOr404(postId, res);
         if (!post) return;
 
+        if (post.bounty_deadline && new Date() > new Date(post.bounty_deadline)) {
+            return res.status(403).json({ error: 'This bounty has passed its deadline' });
+        }
+
         if (post.UserId === req.user.id) {
             return res.status(400).json({ error: 'You cannot enroll in your own bounty' });
         }
@@ -134,6 +138,10 @@ router.post('/:postId/submit', validateToken, async (req, res) => {
         const post = await getBountyPostOr404(postId, res);
         if (!post) return;
 
+        if (post.bounty_deadline && new Date() > new Date(post.bounty_deadline)) {
+            return res.status(403).json({ error: 'This bounty has passed its deadline' });
+        }
+
         const enrollment = await BountyEnrollment.findOne({ where: { UserId: req.user.id, PostId: postId } });
         if (!enrollment) {
             return res.status(403).json({ error: 'You must enroll before submitting a solution' });
@@ -203,6 +211,11 @@ router.put('/submission/:submissionId/review', validateToken, async (req, res) =
             return res.status(400).json({ error: 'marks is required' });
         }
 
+        const parsedMarks = Number(marks);
+        if (!Number.isFinite(parsedMarks) || parsedMarks < 0) {
+            return res.status(400).json({ error: 'marks must be a non-negative number' });
+        }
+
         const submission = await BountySubmission.findByPk(submissionId, {
             include: [{ model: Post }]
         });
@@ -218,14 +231,14 @@ router.put('/submission/:submissionId/review', validateToken, async (req, res) =
             return res.status(400).json({ error: 'Submission has already been reviewed' });
         }
 
-        submission.marks = marks;
+        submission.marks = parsedMarks;
         submission.feedback = feedback || null;
         submission.status = 'REVIEWED';
         await submission.save();
 
         // Credit the solver's profile points
         const solver = await User.findByPk(submission.UserId);
-        solver.points += marks;
+        solver.points += parsedMarks;
         await solver.save();
 
         // Mark their enrollment as completed

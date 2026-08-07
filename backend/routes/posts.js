@@ -102,13 +102,15 @@ router.get('/:postId', async (req, res) => {
 // Create a new post
 router.post('/create', validateToken, async (req, res) => {
     try {
-        const { text_content, code_snippet, category, language } = req.body;
+        const { text_content, code_snippet, category, language, bounty_reward_points, bounty_deadline } = req.body;
 
         const newPost = await Post.create({
             text_content,
             code_snippet,
             category,
             language: language || 'General',
+            bounty_reward_points: bounty_reward_points ?? null,
+            bounty_deadline: bounty_deadline ?? null,
             UserId: req.user.id
         });
 

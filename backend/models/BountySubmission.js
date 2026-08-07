@@ -25,6 +25,9 @@ const BountySubmission = sequelize.define('BountySubmission', {
         type: DataTypes.TEXT,
         allowNull: true,
     }
+}, { indexes: [
+    {unique: true, fields: ['UserId', 'PostId']}
+]
 });
 
 module.exports = BountySubmission;

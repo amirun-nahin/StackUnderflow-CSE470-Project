@@ -67,27 +67,34 @@ const Home = ({ activeFeed }) => {
 
   return (
     <div className="home-layout">
-      {/* LEFT SIDEBAR: Discover / Network */}
-      <aside className="left-sidebar panel">
-        <h3>My Network</h3>
-        <p>Peers list coming soon...</p>
-        <CompetitionBoard />   {/* ADD */}
+      {/* LEFT SIDEBAR: Discover / Network & Competitions */}
+      <aside 
+        className="left-sidebar" 
+        style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+      >
+        {/* Card 1: My Network */}
+        <div className="panel">
+          <h3>My Network</h3>
+          <p>Peers list coming soon...</p>
+        </div>
+
+        {/* Card 2: Competitions */}
+        <div className="panel">
+          <CompetitionBoard />
+        </div>
       </aside>
 
       {/* CENTER: Feed & Post Creation */}
       <main className="feed-column">
         <CreatePost onPostCreated={handlePostCreated} />
-
         <div className="posts-container">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
-
           {posts.length === 0 && !loading && (
              <div className="empty-state">No posts found in this feed.</div>
           )}
         </div>
-
         {posts.length > 0 && (
           <button
             className="btn btn-outline load-more-btn"
@@ -99,12 +106,22 @@ const Home = ({ activeFeed }) => {
         )}
       </main>
 
-      {/* RIGHT SIDEBAR: Quizzes / Challenges */}
-      <aside className="right-sidebar panel">
-        <h3>Trending Challenges</h3>
-        <p>Daily Wordle coming soon...</p>
-        <h3 className="bounty-board-heading">Micro-Bounty Board</h3>   {/* ADD */}
-        <BountyBoard />
+      {/* RIGHT SIDEBAR: Quizzes / Challenges & Bounties */}
+      <aside 
+        className="right-sidebar"
+        style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+      >
+        {/* Card 1: Trending Challenges */}
+        <div className="panel">
+          <h3>Trending Challenges</h3>
+          <p>Daily Wordle coming soon...</p>
+        </div>
+
+        {/* Card 2: Micro-Bounty Board */}
+        <div className="panel">
+          <h3 className="bounty-board-heading">Micro-Bounty Board</h3>
+          <BountyBoard />
+        </div>
       </aside>
     </div>
   );

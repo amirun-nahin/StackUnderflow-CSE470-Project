@@ -10,7 +10,6 @@ const BountyEnrollment = require('./models/BountyEnrollment');
 const BountySubmission = require('./models/BountySubmission');
 const Competition = require('./models/Competition');
 const CompetitionSubmission = require('./models/CompetitionSubmission');
-//const bountyRoutes = require('./routes/bounty');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -30,11 +29,14 @@ const postRoutes = require('./routes/posts');
 app.use('/api/posts', postRoutes);
 
 const userRoutes = require('./routes/users')
-app.use('/api/users', require('./routes/users'));
+app.use('/api/users', userRoutes);
+
 const bountyRoutes = require('./routes/bounty');
 app.use('/api/bounty', bountyRoutes);
+
 const competitionRoutes = require('./routes/competition');
 app.use('/api/competition', competitionRoutes);
+
 // Fallback Route
 app.get('/', (req, res) => {
     res.send("StackUnderflow API is running!");
@@ -65,6 +67,7 @@ Vote.belongsTo(Post);
 User.belongsToMany(User, { as: 'Followers', through: 'UserFollowers', foreignKey: 'followingId', otherKey: 'followerId' });
 User.belongsToMany(User, { as: 'Following', through: 'UserFollowers', foreignKey: 'followerId', otherKey: 'followingId' });
 
+// Micro Bounty Board
 User.hasMany(BountyEnrollment);
 BountyEnrollment.belongsTo(User);
 Post.hasMany(BountyEnrollment);
@@ -75,11 +78,14 @@ BountySubmission.belongsTo(User);
 Post.hasMany(BountySubmission);
 BountySubmission.belongsTo(Post);
 User.hasMany(Competition);
+
+// Coding Competition 
 Competition.belongsTo(User);
 User.hasMany(CompetitionSubmission);
 CompetitionSubmission.belongsTo(User);
 Competition.hasMany(CompetitionSubmission);
 CompetitionSubmission.belongsTo(Competition);
+
 // Database Sync and Server Start
 sequelize.sync().then(() => {
     console.log('Database connected successfully!');

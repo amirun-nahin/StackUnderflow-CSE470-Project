@@ -84,6 +84,18 @@ const BountyDetail = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
+    useEffect(() => {
+        // Find the logged-in user's enrollment record
+        const myEnrollment = enrollments.find(e => e.User?.id === myUserId);
+        
+        // If they exist and their status is SUBMITTED or COMPLETED, update the state
+        if (myEnrollment && (myEnrollment.status === 'SUBMITTED' || myEnrollment.status === 'COMPLETED')) {
+            setHasSubmitted(true);
+        } else {
+            setHasSubmitted(false);
+        }
+    }, [enrollments, myUserId]);
+
     const handleEnroll = async () => {
         setErrorMessage('');
         setStatusMessage('');

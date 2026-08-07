@@ -6,6 +6,8 @@ const Post = require('../models/Post');
 const BountyEnrollment = require('../models/BountyEnrollment');
 const BountySubmission = require('../models/BountySubmission');
 const Competition = require('../models/Competition');
+const Vote = require('../models/Vote');
+const Comment = require('../models/Comment');
 const CompetitionSubmission = require('../models/CompetitionSubmission');
 const { validateToken } = require('../middlewares/AuthMiddleware');
 
@@ -31,7 +33,7 @@ router.get('/:username', validateToken, async (req, res) => {
             where: { username: req.params.username },
             attributes: { exclude: ['password'] }, 
             include: [
-                { model: Post },
+                { model: Post , include: [{model: Vote}, {model: Comment}]},
                 { model: User, as: 'Followers', attributes: ['id', 'username'] },
                 { model: User, as: 'Following', attributes: ['id', 'username'] },
                 {

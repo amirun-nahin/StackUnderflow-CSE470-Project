@@ -13,8 +13,20 @@ const PostDetail = () => {
 
     const token = localStorage.getItem('accessToken');
     // WE GRAB BOTH THE ID AND USERNAME NOW
-    const myUserId = token ? JSON.parse(atob(token.split('.')[1])).id : null;
-    const myUsername = token ? JSON.parse(atob(token.split('.')[1])).username : 'Me';
+    let myUserId = null;
+    let myUsername = 'Me';
+
+    if (token && token !== 'undefined' && token !== 'null') {
+        try {
+            if (token.includes('.')) {
+                const decoded = JSON.parse(atob(token.split('.')[1]));
+                myUserId = decoded.id;
+                myUsername = decoded.username;
+            }
+        } catch (error) {
+            console.error('Corrupted token found, ignoring safely.', error);
+        }
+    }
 
     const buildTree = (flatComments) => {
         if (!flatComments) return [];
