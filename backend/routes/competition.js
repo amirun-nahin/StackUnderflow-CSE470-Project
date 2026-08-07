@@ -212,6 +212,11 @@ router.put('/submission/:submissionId/evaluate', validateToken, async (req, res)
         if (submission.Competition.UserId !== req.user.id) {
             return res.status(403).json({ error: 'Only the host can evaluate this submission' });
         }
+        
+        const phase = getPhase(submission.Competition);
+        if (phase === 'ACTIVE') {
+            return res.status(403).json({ error: 'Cannot evaluate submissions while the competition is still active' });
+        }
 
         submission.score = score;
         submission.time_complexity = time_complexity || null;
