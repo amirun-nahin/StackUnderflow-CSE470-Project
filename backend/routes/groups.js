@@ -1,0 +1,333 @@
+const express = require("express");
+const router = express.Router();
+const sequelize = require('../config/db');
+const Group = require("../models/Group");
+const GroupMember = require("../models/GroupMember");
+const Post = require("../models/Post");
+const User = require("../models/User");
+const Comment = require("../models/Comment");
+const Vote = require("../models/Vote");
+const { validateToken } = require("../middlewares/AuthMiddleware");
+
+// Create a Group (Creator becomes ADMIN)
+router.post("/create", validateToken, async (req, res) => {
+  try {
+    const { name, description, is_private } = req.body;
+    if (!name) return res.status(400).json({ error: "Group name is required" });
+
+    const group = await Group.create({ name, description, is_private });
+
+    await GroupMember.create({
+      UserId: req.user.id,
+      GroupId: group.id,
+      role: "ADMIN",
+      status: "APPROVED",
+    });
+
+    res.status(201).json(group);
+  } catch (error) {
+    console.error("Group creation error:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to create group. Name might be taken." });
+  }
+});
+
+// Get all Groups
+router.get("/", validateToken, async (req, res) => {
+  try {
+    const groups = await Group.findAll({
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: User,
+          attributes: ["id", "username", "profile_picture"],
+          through: { attributes: ["role", "status"] },
+        },
+      ],
+    });
+
+    const userId = req.user.id;
+
+    const enrichedGroups = groups.map((group) => {
+      const json = group.toJSON();
+      const membershipRecord = json.Users.find((u) => u.id === userId);
+      const myMembership = membershipRecord
+        ? membershipRecord.GroupMember
+        : null;
+
+      return {
+        ...json,
+        myMembership,
+      };
+    });
+
+    res.json(enrichedGroups);
+  } catch (error) {
+    console.error("Fetch groups error:", error);
+    res.status(500).json({ error: "Failed to fetch groups" });
+  }
+});
+
+// Toggle Privacy - Admins Only
+router.put("/:groupId/toggle-privacy", validateToken, async (req, res) => {
+  try {
+    const membership = await GroupMember.findOne({
+      where: {
+        GroupId: req.params.groupId,
+        UserId: req.user.id,
+        role: "ADMIN",
+      },
+    });
+
+    if (!membership)
+      return res
+        .status(403)
+        .json({ error: "Only admins can change privacy settings" });
+
+    const group = await Group.findByPk(req.params.groupId);
+    if (!group) return res.status(404).json({ error: "Group not found" });
+
+    group.is_private = !group.is_private;
+    await group.save();
+
+    if (!group.is_private) {
+      await GroupMember.update(
+        { status: "APPROVED" },
+        { where: { GroupId: group.id, status: "PENDING" } },
+      );
+    }
+
+    res.json({
+      message: `Group is now ${group.is_private ? "Private" : "Public"}`,
+      group,
+    });
+  } catch (error) {
+    console.error("Toggle privacy error:", error);
+    res.status(500).json({ error: "Failed to toggle privacy" });
+  }
+});
+
+// Join a Group (Or request to join if private)
+router.post("/:groupId/join", validateToken, async (req, res) => {
+  try {
+    const group = await Group.findByPk(req.params.groupId);
+    if (!group) return res.status(404).json({ error: "Group not found" });
+
+    const existing = await GroupMember.findOne({
+      where: { GroupId: group.id, UserId: req.user.id },
+    });
+    if (existing)
+      return res
+        .status(400)
+        .json({ error: "You have already joined or requested to join" });
+
+    const status = group.is_private ? "PENDING" : "APPROVED";
+    await GroupMember.create({
+      UserId: req.user.id,
+      GroupId: group.id,
+      status,
+    });
+
+    res.json({
+      message:
+        status === "PENDING" ? "Request sent to admins" : "Joined successfully",
+    });
+  } catch (error) {
+    console.error("Join group error:", error);
+    res.status(500).json({ error: "Failed to join group" });
+  }
+});
+
+// Admin: View Pending Join Requests
+router.get("/:groupId/requests", validateToken, async (req, res) => {
+  try {
+    const isAdmin = await GroupMember.findOne({
+      where: {
+        GroupId: req.params.groupId,
+        UserId: req.user.id,
+        role: "ADMIN",
+      },
+    });
+    if (!isAdmin)
+      return res.status(403).json({ error: "Only admins can view requests" });
+
+    const groupWithRequests = await Group.findByPk(req.params.groupId, {
+      include: [
+        {
+          model: User,
+          through: { where: { status: "PENDING" }, attributes: ["status"] },
+          attributes: ["id", "username"],
+        },
+      ],
+    });
+
+    // Return just the array of pending users
+    res.json(groupWithRequests ? groupWithRequests.Users : []);
+  } catch (error) {
+    console.error("Fetch requests error:", error);
+    res.status(500).json({ error: "Failed to fetch requests" });
+  }
+});
+
+// Admin: Approve a Join Request
+router.put(
+  "/:groupId/requests/:userId/approve",
+  validateToken,
+  async (req, res) => {
+    try {
+      const isAdmin = await GroupMember.findOne({
+        where: {
+          GroupId: req.params.groupId,
+          UserId: req.user.id,
+          role: "ADMIN",
+        },
+      });
+      if (!isAdmin)
+        return res
+          .status(403)
+          .json({ error: "Only admins can approve requests" });
+
+      const request = await GroupMember.findOne({
+        where: {
+          GroupId: req.params.groupId,
+          UserId: req.params.userId,
+          status: "PENDING",
+        },
+      });
+      if (!request)
+        return res.status(404).json({ error: "Pending request not found" });
+
+      request.status = "APPROVED";
+      await request.save();
+
+      res.json({ message: "Member approved successfully" });
+    } catch (error) {
+      console.error("Approve request error:", error);
+      res.status(500).json({ error: "Failed to approve request" });
+    }
+  },
+);
+
+// Create a Group Post (approved members, standard post only)
+router.post("/:groupId/posts", validateToken, async (req, res) => {
+  try {
+    const { text_content, code_snippet, language } = req.body;
+    const { groupId } = req.params;
+
+    const member = await GroupMember.findOne({
+      where: { GroupId: groupId, UserId: req.user.id, status: "APPROVED" },
+    });
+    if (!member)
+      return res.status(403).json({
+        error: "You must be an approved member to post in this group",
+      });
+
+    const post = await Post.create({
+      text_content,
+      code_snippet,
+      category: "NORMAL",
+      language: language || "General",
+      GroupId: groupId,
+      UserId: req.user.id,
+    });
+
+    const postWithUser = await Post.findByPk(post.id, {
+      include: [{ model: User, attributes: ["username", "profile_picture"] }],
+    });
+
+    res.status(201).json(postWithUser);
+  } catch (error) {
+    console.error("Group post error:", error);
+    res.status(500).json({ error: "Failed to create group post" });
+  }
+});
+
+// Get Group Feed
+router.get("/:groupId/posts", validateToken, async (req, res) => {
+  try {
+    const group = await Group.findByPk(req.params.groupId);
+    if (!group) return res.status(404).json({ error: "Group not found" });
+
+    if (group.is_private) {
+      const member = await GroupMember.findOne({
+        where: { GroupId: group.id, UserId: req.user.id, status: "APPROVED" },
+      });
+      if (!member)
+        return res
+          .status(403)
+          .json({ error: "This group is private. Access denied." });
+    }
+
+    const posts = await Post.findAll({
+      where: { GroupId: group.id },
+      order: [["createdAt", "DESC"]],
+      include: [
+        { model: User, attributes: ["id", "username", "profile_picture"] },
+        { model: Vote },
+        {
+          model: Comment,
+          where: { is_deleted: false },
+          required: false,
+          include: [{ model: User, attributes: ["username"] }],
+        },
+      ],
+    });
+
+    res.json(posts);
+  } catch (error) {
+    console.error("Fetch group feed error:", error);
+    res.status(500).json({ error: "Failed to fetch group posts" });
+  }
+});
+
+// Admin: Delete the Group
+router.delete("/:groupId", validateToken, async (req, res) => {
+    try {
+        const isAdmin = await GroupMember.findOne({
+            where: { GroupId: req.params.groupId, UserId: req.user.id, role: "ADMIN" }
+        });
+        if (!isAdmin) return res.status(403).json({ error: "Only admins can delete the group" });
+
+        // Find which posts belong to this group, so we know which comments/votes to remove
+        const posts = await Post.findAll({ where: { GroupId: req.params.groupId }, attributes: ['id'] });
+        const postIds = posts.map(p => p.id);
+
+        await sequelize.transaction(async (t) => {
+            if (postIds.length) {
+                await Comment.destroy({ where: { PostId: postIds }, transaction: t });
+                await Vote.destroy({ where: { PostId: postIds }, transaction: t });
+                await Post.destroy({ where: { GroupId: req.params.groupId }, transaction: t });
+            }
+            await GroupMember.destroy({ where: { GroupId: req.params.groupId }, transaction: t });
+            await Group.destroy({ where: { id: req.params.groupId }, transaction: t });
+        });
+
+        res.json({ message: "Group deleted" });
+    } catch (error) {
+        console.error("Delete group error:", error);
+        res.status(500).json({ error: "Failed to delete group" });
+    }
+});
+
+// Leave the Group (approved members)
+router.delete("/:groupId/leave", validateToken, async (req, res) => {
+    try {
+        const membership = await GroupMember.findOne({
+            where: { GroupId: req.params.groupId, UserId: req.user.id }
+        });
+        if (!membership) {
+            return res.status(404).json({ error: "You are not a member of this group" });
+        }
+        if (membership.role === "ADMIN") {
+            return res.status(400).json({ error: "The admin cannot leave the group. Delete the group instead." });
+        }
+        await membership.destroy();
+        res.json({ message: "Left group successfully" });
+    } catch (error) {
+        console.error("Leave group error:", error);
+        res.status(500).json({ error: "Failed to leave group" });
+    }
+});
+
+module.exports = router;
