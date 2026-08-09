@@ -32,7 +32,11 @@ const Post = sequelize.define('Post', {
         type: DataTypes.ENUM('OPEN', 'CLOSED'),
         allowNull: true,
         defaultValue: 'OPEN'
-    }    
+    },
+    GroupId: {
+        type: DataTypes.INTEGER,
+        allowNull: true, // Null means it's a global feed post
+    }   
 });
 
 module.exports = Post;

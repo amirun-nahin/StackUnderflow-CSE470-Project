@@ -16,6 +16,7 @@ router.get('/feed', async (req, res) => {
         const offset = (page - 1) * limit;
 
         const posts = await Post.findAll({
+            where: {GroupId: null},
             limit: limit,
             offset: offset,
             order: [['createdAt', 'DESC']],
@@ -56,7 +57,7 @@ router.get('/feed/following', validateToken, async (req, res) => {
         }
 
         const posts = await Post.findAll({
-            where: { UserId: followingIds },
+            where: { UserId: followingIds , GroupId: null},
             limit: limit,
             offset: offset,
             order: [['createdAt', 'DESC']],

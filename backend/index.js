@@ -10,6 +10,8 @@ const BountyEnrollment = require('./models/BountyEnrollment');
 const BountySubmission = require('./models/BountySubmission');
 const Competition = require('./models/Competition');
 const CompetitionSubmission = require('./models/CompetitionSubmission');
+const Group = require('./models/Group');
+const GroupMember = require('./models/GroupMember');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -36,6 +38,9 @@ app.use('/api/bounty', bountyRoutes);
 
 const competitionRoutes = require('./routes/competition');
 app.use('/api/competition', competitionRoutes);
+
+const groupRoutes = require('./routes/groups');
+app.use('/api/groups', groupRoutes);
 
 // Fallback Route
 app.get('/', (req, res) => {
@@ -85,6 +90,12 @@ User.hasMany(CompetitionSubmission);
 CompetitionSubmission.belongsTo(User);
 Competition.hasMany(CompetitionSubmission);
 CompetitionSubmission.belongsTo(Competition);
+
+// Group Creation
+User.belongsToMany(Group, { through: GroupMember });
+Group.belongsToMany(User, { through: GroupMember });
+Group.hasMany(Post);
+Post.belongsTo(Group);
 
 // Database Sync and Server Start
 sequelize.sync().then(() => {

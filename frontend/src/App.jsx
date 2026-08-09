@@ -7,8 +7,11 @@ import PostDetail from "./pages/PostDetail";
 import Profile from "./pages/Profile";
 import Discover from "./pages/Discover";
 import BountyDetail from "./pages/BountyDetail";
-import CompetitionDetail from "./pages/CompetitionDetail";   // ADD
-import HostCompetition from "./pages/HostCompetition";       // ADD
+import CompetitionDetail from "./pages/CompetitionDetail";
+import HostCompetition from "./pages/HostCompetition";
+import Groups from "./pages/Groups";
+import CreateGroup from "./pages/CreateGroup";
+import GroupDetail from "./pages/GroupDetail";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("accessToken");
@@ -58,6 +61,13 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
             >
               Discover
             </Link>
+            <Link
+              to="/groups"
+              onClick={() => setActiveFeed("groups")}
+              className={`navbar__tab ${activeFeed === "groups" ? "navbar__tab--active" : ""}`}
+            >
+              Groups
+            </Link>
           </div>
         )}
       </div>
@@ -65,8 +75,11 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
       <div className="navbar__right">
         {token ? (
           <>
-            <Link to={`/profile/${myUsername}`} className="navbar__profile-link">
-              My Profile
+            <Link
+              to={`/profile/${myUsername}`}
+              className="navbar__profile-link"
+            >
+              Profile
             </Link>
             <button onClick={handleLogout} className="btn btn-outline btn-sm">
               Logout
@@ -149,6 +162,30 @@ function App() {
           element={
             <ProtectedRoute>
               <HostCompetition />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/groups"
+          element={
+            <ProtectedRoute>
+              <Groups />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/create-group"
+          element={
+            <ProtectedRoute>
+              <CreateGroup />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/group/:id"
+          element={
+            <ProtectedRoute>
+              <GroupDetail />
             </ProtectedRoute>
           }
         />
