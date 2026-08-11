@@ -12,6 +12,7 @@ import HostCompetition from "./pages/HostCompetition";
 import Groups from "./pages/Groups";
 import CreateGroup from "./pages/CreateGroup";
 import GroupDetail from "./pages/GroupDetail";
+import Chat from "./pages/Chat";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("accessToken");
@@ -67,6 +68,13 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
               className={`navbar__tab ${activeFeed === "groups" ? "navbar__tab--active" : ""}`}
             >
               Groups
+            </Link>
+            <Link
+              to="/chat"
+              onClick={() => setActiveFeed("chat")}
+              className={`navbar__tab ${activeFeed === "chat" ? "navbar__tab--active" : ""}`}
+            >
+              Messages
             </Link>
           </div>
         )}
@@ -186,6 +194,14 @@ function App() {
           element={
             <ProtectedRoute>
               <GroupDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <Chat />
             </ProtectedRoute>
           }
         />

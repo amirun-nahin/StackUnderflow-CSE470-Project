@@ -21,7 +21,7 @@ const CommentNode = ({ comment, handleAddReply, handleDeleteComment, myUserId })
                 </strong>
 
                 <p className="comment__text">
-                    {comment.text_content}
+                    {comment.is_deleted ? '[The comment is deleted]' : comment.text_content}
                 </p>
 
                 {/* Only show actions if the comment is NOT deleted */}

@@ -5,7 +5,7 @@
    category gutter on every post card (the one signature move).
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
 
 /* -------------------------------------------------------------------------
    1. Design tokens
@@ -51,8 +51,10 @@
   --color-code-border: #2b2f38;
 
   /* Type */
-  --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans:
+    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:
+    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
@@ -91,7 +93,9 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 
@@ -105,7 +109,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-family: var(--font-mono);
   font-weight: 600;
   color: var(--color-ink);
@@ -130,7 +137,9 @@ button {
   cursor: pointer;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   color: var(--color-ink);
@@ -143,7 +152,9 @@ input, select, textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
@@ -183,7 +194,7 @@ input, select, textarea {
   color: var(--color-accent-strong);
 }
 .navbar__brand::before {
-  content: '> ';
+  content: "> ";
   color: var(--color-accent);
 }
 
@@ -261,16 +272,39 @@ input, select, textarea {
   align-items: start;
 }
 
-.left-sidebar { grid-area: left; position: sticky; top: calc(64px + var(--space-5)); }
-.feed-column { grid-area: feed; display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
-.right-sidebar { grid-area: right; position: sticky; top: calc(64px + var(--space-5)); }
+.left-sidebar {
+  grid-area: left;
+  position: sticky;
+  top: calc(64px + var(--space-5));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5)
+}
+.feed-column {
+  grid-area: feed;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+.right-sidebar {
+  grid-area: right;
+  position: sticky;
+  top: calc(64px + var(--space-5));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
 
 @media (max-width: 960px) {
   .home-layout {
     grid-template-columns: 1fr;
     grid-template-areas: "feed" "left" "right";
   }
-  .left-sidebar, .right-sidebar { position: static; }
+  .left-sidebar,
+  .right-sidebar {
+    position: static;
+  }
 }
 
 /* -------------------------------------------------------------------------
@@ -294,14 +328,16 @@ input, select, textarea {
   margin-bottom: var(--space-3);
 }
 
-.left-sidebar h3, .right-sidebar h3 {
+.left-sidebar h3,
+.right-sidebar h3 {
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-ink-muted);
   margin-bottom: var(--space-2);
 }
-.left-sidebar p, .right-sidebar p {
+.left-sidebar p,
+.right-sidebar p {
   font-size: var(--text-sm);
   color: var(--color-ink-faint);
 }
@@ -319,7 +355,11 @@ input, select, textarea {
   padding: 0.65rem 1.25rem;
   border-radius: var(--radius-md);
   border: 1px solid transparent;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .btn-primary {
@@ -354,7 +394,6 @@ input, select, textarea {
   color: var(--color-accent-strong);
   font-family: var(--font-mono);
   padding: 0.4rem 0.6rem;
-
 }
 .btn-ghost:hover {
   background-color: var(--color-accent-tint);
@@ -530,16 +569,26 @@ input, select, textarea {
   padding: var(--space-5);
   border-left-width: 4px;
   border-left-style: solid;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
 }
 .post-card--clickable:hover {
   box-shadow: var(--shadow-md);
 }
 
-.post-card--normal { border-left-color: var(--color-cat-normal); }
-.post-card--review { border-left-color: var(--color-cat-review); }
-.post-card--collab { border-left-color: var(--color-cat-collab); }
-.post-card--bounty { border-left-color: var(--color-cat-bounty); }
+.post-card--normal {
+  border-left-color: var(--color-cat-normal);
+}
+.post-card--review {
+  border-left-color: var(--color-cat-review);
+}
+.post-card--collab {
+  border-left-color: var(--color-cat-collab);
+}
+.post-card--bounty {
+  border-left-color: var(--color-cat-bounty);
+}
 
 .post-header {
   display: flex;
@@ -587,10 +636,22 @@ input, select, textarea {
   font-weight: 600;
   white-space: nowrap;
 }
-.category-chip--normal { background-color: var(--color-cat-normal-tint); color: var(--color-cat-normal); }
-.category-chip--review { background-color: var(--color-cat-review-tint); color: var(--color-cat-review); }
-.category-chip--collab { background-color: var(--color-cat-collab-tint); color: var(--color-cat-collab); }
-.category-chip--bounty { background-color: var(--color-cat-bounty-tint); color: var(--color-cat-bounty); }
+.category-chip--normal {
+  background-color: var(--color-cat-normal-tint);
+  color: var(--color-cat-normal);
+}
+.category-chip--review {
+  background-color: var(--color-cat-review-tint);
+  color: var(--color-cat-review);
+}
+.category-chip--collab {
+  background-color: var(--color-cat-collab-tint);
+  color: var(--color-cat-collab);
+}
+.category-chip--bounty {
+  background-color: var(--color-cat-bounty-tint);
+  color: var(--color-cat-bounty);
+}
 
 .post-body {
   margin-bottom: var(--space-4);
@@ -646,8 +707,14 @@ input, select, textarea {
 .stat-btn:hover {
   background-color: var(--color-surface-sunken);
 }
-.stat-btn--up.stat-btn--active { color: var(--color-up); background-color: var(--color-up-tint); }
-.stat-btn--down.stat-btn--active { color: var(--color-down); background-color: var(--color-down-tint); }
+.stat-btn--up.stat-btn--active {
+  color: var(--color-up);
+  background-color: var(--color-up-tint);
+}
+.stat-btn--down.stat-btn--active {
+  color: var(--color-down);
+  background-color: var(--color-down-tint);
+}
 
 /* -------------------------------------------------------------------------
    10. Feed misc
@@ -783,10 +850,22 @@ input, select, textarea {
   border-radius: var(--radius-full);
   border: 1px solid;
 }
-.profile-status-badge--open { color: var(--color-up); border-color: var(--color-up); }
-.profile-status-badge--looking { color: var(--color-cat-review); border-color: var(--color-cat-review); }
-.profile-status-badge--busy { color: var(--color-down); border-color: var(--color-down); }
-.profile-status-badge--browsing { color: var(--color-ink-muted); border-color: var(--color-border-strong); }
+.profile-status-badge--open {
+  color: var(--color-up);
+  border-color: var(--color-up);
+}
+.profile-status-badge--looking {
+  color: var(--color-cat-review);
+  border-color: var(--color-cat-review);
+}
+.profile-status-badge--busy {
+  color: var(--color-down);
+  border-color: var(--color-down);
+}
+.profile-status-badge--browsing {
+  color: var(--color-ink-muted);
+  border-color: var(--color-border-strong);
+}
 
 .avatar-circle {
   border-radius: var(--radius-full);
@@ -796,8 +875,16 @@ input, select, textarea {
   align-items: center;
   justify-content: center;
 }
-.avatar-circle--sm { width: 32px; height: 32px; font-size: var(--text-md); }
-.avatar-circle--md { width: 50px; height: 50px; font-size: var(--text-lg); }
+.avatar-circle--sm {
+  width: 32px;
+  height: 32px;
+  font-size: var(--text-md);
+}
+.avatar-circle--md {
+  width: 50px;
+  height: 50px;
+  font-size: var(--text-lg);
+}
 .avatar-circle--lg {
   width: 100px;
   height: 100px;
@@ -1071,4 +1158,198 @@ input, select, textarea {
 .admin-panel-actions {
   display: flex;
   gap: var(--space-3);
+}
+
+/* -------------------------------------------------------------------------
+   16. Chat System
+   ------------------------------------------------------------------------- */
+.chat-layout {
+  display: flex;
+  height: 70vh;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.chat-sidebar {
+  width: 35%;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface-sunken);
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-sidebar-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-ink-muted);
+}
+
+.chat-sidebar-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.chat-user-item {
+  padding: var(--space-4);
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+.chat-user-item:hover,
+.chat-user-item--active {
+  background: var(--color-surface);
+  border-left: 4px solid var(--color-accent);
+}
+
+.chat-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-window-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-weight: 600;
+  font-size: var(--text-md);
+}
+
+.chat-messages {
+  flex: 1;
+  padding: var(--space-4);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.chat-bubble {
+  max-width: 75%;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  white-space: pre-wrap;
+}
+
+.chat-bubble--sent {
+  align-self: flex-end;
+  background: var(--color-accent-tint);
+  color: var(--color-accent-strong);
+  border-bottom-right-radius: 4px;
+}
+
+.chat-bubble--received {
+  align-self: flex-start;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-input-area {
+  padding: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--space-2);
+}
+
+.chat-input {
+  flex: 1;
+  padding: 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+}
+
+/* Update this existing class */
+.chat-sidebar-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-dropdown-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-accent);
+  margin-bottom: var(--space-3);
+  text-transform: uppercase;
+}
+
+.chat-empty-text {
+  padding: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-ink-faint);
+}
+
+.chat-window-empty {
+  margin: auto;
+}
+
+
+.chat-dropdown-menu {
+  padding: var(--space-3);
+  background-color: var(--color-surface);
+  border-top: 2px solid var(--color-border);
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.chat-sidebar-footer {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-surface-sunken);
+}
+
+.chat-bubble {
+  max-width: 75%;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  white-space: pre-wrap;
+  word-break: break-word; /* Add this line here */
+}
+
+/* -------------------------------------------------------------------------
+   17. My Network — unread messages list
+   ------------------------------------------------------------------------- */
+.network-unread-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.network-unread-label {
+  font-size: var(--text-xs);
+  color: var(--color-accent-strong);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.network-unread-item {
+  display: flex;
+  justify-content: space-between;
+  text-decoration: none;
+}
+
+.network-unread-username {
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.network-unread-dot {
+  color: var(--color-cat-review);
+  font-weight: bold;
 }
