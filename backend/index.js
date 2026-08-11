@@ -13,6 +13,7 @@ const CompetitionSubmission = require('./models/CompetitionSubmission');
 const Group = require('./models/Group');
 const GroupMember = require('./models/GroupMember');
 const Message = require('./models/Message');
+const SavedNews = require('./models/SavedNews');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -45,6 +46,12 @@ app.use('/api/groups', groupRoutes);
 
 const chatRoutes = require('./routes/chat');
 app.use('/api/chat', chatRoutes);
+
+const newsRoutes = require('./routes/news');
+app.use('/api/news', newsRoutes);
+
+const jobRoutes = require('./routes/jobs');
+app.use('/api/jobs', jobRoutes);
 
 // Fallback Route
 app.get('/', (req, res) => {
@@ -107,6 +114,10 @@ Message.belongsTo(User, { as: 'Sender', foreignKey: 'SenderId' });
 
 User.hasMany(Message, { as: 'ReceivedMessages', foreignKey: 'ReceiverId' });
 Message.belongsTo(User, { as: 'Receiver', foreignKey: 'ReceiverId' });
+
+// Saved News
+User.hasMany(SavedNews);
+SavedNews.belongsTo(User);
 
 // Database Sync and Server Start
 sequelize.sync().then(() => {

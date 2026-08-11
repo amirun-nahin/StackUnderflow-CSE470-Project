@@ -13,6 +13,7 @@ import Groups from "./pages/Groups";
 import CreateGroup from "./pages/CreateGroup";
 import GroupDetail from "./pages/GroupDetail";
 import Chat from "./pages/Chat";
+import NewsReader from "./pages/NewsReader";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("accessToken");
@@ -202,6 +203,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Chat />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/news/:id"
+          element={
+            <ProtectedRoute>
+              <NewsReader />
             </ProtectedRoute>
           }
         />
