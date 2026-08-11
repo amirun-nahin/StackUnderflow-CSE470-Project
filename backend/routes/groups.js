@@ -267,8 +267,6 @@ router.get("/:groupId/posts", validateToken, async (req, res) => {
         { model: Vote },
         {
           model: Comment,
-          where: { is_deleted: false },
-          required: false,
           include: [{ model: User, attributes: ["username"] }],
         },
       ],

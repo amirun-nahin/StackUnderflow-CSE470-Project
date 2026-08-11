@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import PostCard from '../components/PostCard';
 import CreatePost from '../components/CreatePost';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import BountyBoard from '../components/BountyBoard';
-import CompetitionBoard from '../components/CompetitionBoard';   // ADD
+import CompetitionBoard from '../components/CompetitionBoard';
 
 const Home = ({ activeFeed }) => {
   const [posts, setPosts] = useState([]);
@@ -65,17 +65,47 @@ const Home = ({ activeFeed }) => {
       }
   };
 
+  const [unreadChats, setUnreadChats] = useState([]);
+  useEffect(() => {
+    const fetchUnread = () => {
+      fetch('http://localhost:3001/api/chat/unread', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+      })
+      .then(res => res.json())
+      .then(data => setUnreadChats(data))
+      .catch(console.error);
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="home-layout">
       {/* LEFT SIDEBAR: Discover / Network & Competitions */}
-      <aside 
-        className="left-sidebar" 
-        style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
-      >
+      <aside className="left-sidebar">
         {/* Card 1: My Network */}
         <div className="panel">
           <h3>My Network</h3>
-          <p>Peers list coming soon...</p>
+          {unreadChats.length > 0 ? (
+            <div className="network-unread-list">
+              <p className="network-unread-label">Unread Messages</p>
+              {unreadChats.map(user => (
+                <Link
+                  key={user.id}
+                  to="/chat"
+                  state={{ openUser: user }}
+                  className="network-unread-item"
+                >
+                  <span className="network-unread-username">{user.username}</span>
+                  <span className="network-unread-dot">•</span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p>No new messages.</p>
+          )}
         </div>
 
         {/* Card 2: Competitions */}
@@ -107,10 +137,7 @@ const Home = ({ activeFeed }) => {
       </main>
 
       {/* RIGHT SIDEBAR: Quizzes / Challenges & Bounties */}
-      <aside 
-        className="right-sidebar"
-        style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
-      >
+      <aside className="right-sidebar">
         {/* Card 1: Trending Challenges */}
         <div className="panel">
           <h3>Trending Challenges</h3>
