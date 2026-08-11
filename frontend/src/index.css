@@ -102,6 +102,7 @@ body,
 body {
   margin: 0;
   background-color: var(--color-bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100' viewBox='0 0 56 100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23888780' stroke-opacity='0.18'/%3E%3Cpath d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='%23888780' stroke-opacity='0.18'/%3E%3C/svg%3E");
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-size: var(--text-base);
@@ -263,7 +264,8 @@ textarea {
 
 .home-layout {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) 260px;
+  /* Changed from 220px and 260px to 260px and 300px */
+  grid-template-columns: 260px minmax(0, 1fr) 300px;
   grid-template-areas: "left feed right";
   gap: var(--space-5);
   max-width: 1200px;
@@ -278,7 +280,7 @@ textarea {
   top: calc(64px + var(--space-5));
   display: flex;
   flex-direction: column;
-  gap: var(--space-5)
+  gap: var(--space-3);
 }
 .feed-column {
   grid-area: feed;
@@ -293,7 +295,7 @@ textarea {
   top: calc(64px + var(--space-5));
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-3);
 }
 
 @media (max-width: 960px) {
@@ -601,6 +603,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  margin-bottom: var(--space-6);
 }
 
 .post-author {
@@ -1191,6 +1194,36 @@ textarea {
 .chat-sidebar-list {
   overflow-y: auto;
   flex: 1;
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.chat-sidebar-list:hover {
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+/* Chrome, Edge, and Safari support */
+.chat-sidebar-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chat-sidebar-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-sidebar-list::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: var(--radius-full);
+}
+
+.chat-sidebar-list:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-strong);
+}
+
+.chat-sidebar-list::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-ink-muted);
 }
 
 .chat-user-item {
@@ -1227,6 +1260,36 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.chat-messages:hover {
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+/* Chrome, Edge, and Safari support */
+.chat-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: var(--radius-full);
+}
+
+.chat-messages:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-strong);
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-ink-muted);
 }
 
 .chat-bubble {
@@ -1296,13 +1359,46 @@ textarea {
   margin: auto;
 }
 
-
 .chat-dropdown-menu {
   padding: var(--space-3);
   background-color: var(--color-surface);
   border-top: 2px solid var(--color-border);
   max-height: 350px;
   overflow-y: auto;
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.chat-dropdown-menu:hover {
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+/* Chrome, Edge, and Safari support */
+.chat-dropdown-menu::-webkit-scrollbar {
+  width: 4px;
+}
+
+/* Make the track transparent */
+.chat-dropdown-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Hide the thumb by default */
+.chat-dropdown-menu::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: var(--radius-full);
+}
+
+/* Show the thumb ONLY when hovering over the dropdown menu */
+.chat-dropdown-menu:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-strong);
+}
+
+/* Slightly darken the thumb when you actually click/grab it */
+.chat-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-ink-muted);
 }
 
 .chat-sidebar-footer {
@@ -1352,4 +1448,252 @@ textarea {
 .network-unread-dot {
   color: var(--color-cat-review);
   font-weight: bold;
+}
+
+/* -------------------------------------------------------------------------
+   18. Tech News Sidebar Panel
+   ------------------------------------------------------------------------- */
+.news-panel-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Moves the "Tech News" title back to the left */
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  width: 100%;
+}
+
+.news-panel-header h3 {
+  margin-bottom: 0;
+}
+
+.news-tabs {
+  display: flex;
+  justify-content: center; /* Keeps the buttons centered */
+  gap: var(--space-6);
+  width: 100%;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-2);
+}
+
+.news-tab-btn {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  background: none;
+  border: none;
+  color: var(--color-ink-muted);
+  padding: 0 0 2px 0;
+  cursor: pointer;
+}
+
+.news-tab-btn--active {
+  color: var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+}
+
+.news-tag-badge {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-accent-strong);
+  background-color: var(--color-accent-tint);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-3);
+  display: inline-block;
+}
+
+.news-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: var(--space-2);
+
+  /* Make scrollbar invisible by default (Firefox) */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+/* Reveal scrollbar only on hover (Firefox) */
+.news-list:hover {
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+/* Chrome, Edge, and Safari support */
+.news-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.news-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.news-list::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: var(--radius-full);
+}
+
+.news-list:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-strong);
+}
+
+.news-list::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-ink-muted);
+}
+
+.news-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.news-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.news-item__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.news-item__link {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-ink);
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.news-item__link:hover {
+  color: var(--color-accent-strong);
+  text-decoration: underline;
+}
+
+.news-item__source {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-ink-faint);
+}
+
+.news-bookmark-btn {
+  background: none;
+  border: none;
+  font-size: var(--text-lg);
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.news-bookmark-btn--active {
+  color: var(--color-cat-bounty);
+}
+
+/* News Reader */
+.news-reader-cover {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-4);
+}
+.news-reader-title {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-4);
+  line-height: 1.2;
+}
+.news-reader-content {
+  font-size: var(--text-md);
+  line-height: 1.7;
+  color: var(--color-ink);
+}
+.news-reader-content img {
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  margin: var(--space-4) 0;
+}
+.news-reader-content pre {
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+}
+
+/* News Reader Rich Typography Polish */
+.news-reader-content a {
+  color: var(--color-accent);
+  font-weight: 500;
+  text-decoration: underline;
+}
+.news-reader-content ul,
+.news-reader-content ol {
+  margin: var(--space-4) 0;
+  padding-left: var(--space-6);
+}
+.news-reader-content li {
+  margin-bottom: var(--space-2);
+}
+.news-reader-content blockquote {
+  border-left: 4px solid var(--color-accent);
+  margin: var(--space-4) 0;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface-sunken);
+  font-style: italic;
+  color: var(--color-ink-muted);
+}
+.news-reader-content code:not(pre code) {
+  background-color: var(--color-surface-sunken);
+  color: var(--color-down);
+  padding: 0.15rem 0.35rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* =========================================
+   Active Jobs Scrollbar (Shorter Height)
+   ========================================= */
+.jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 150px;
+  overflow-y: auto;
+  padding-right: var(--space-2);
+
+  /* Make scrollbar invisible by default (Firefox) */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+/* Reveal scrollbar only on hover (Firefox) */
+.jobs-list:hover {
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+/* Chrome, Edge, and Safari support */
+.jobs-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.jobs-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.jobs-list::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: var(--radius-full);
+}
+
+.jobs-list:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-strong);
+}
+
+.jobs-list::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-ink-muted);
 }

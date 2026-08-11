@@ -4,7 +4,8 @@ import CreatePost from '../components/CreatePost';
 import { useNavigate, Link } from 'react-router-dom';
 import BountyBoard from '../components/BountyBoard';
 import CompetitionBoard from '../components/CompetitionBoard';
-
+import TechNewsCard from '../components/TechNewsCard';
+import ActiveJobsCard from '../components/ActiveJobsCard';
 const Home = ({ activeFeed }) => {
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
@@ -108,7 +109,13 @@ const Home = ({ activeFeed }) => {
           )}
         </div>
 
-        {/* Card 2: Competitions */}
+        {/* Card 2: Tech News (NEW) */}
+        <TechNewsCard />
+        
+        {/* Card 3: Active Jobs */}
+        <ActiveJobsCard />
+
+        {/* Card 3: Competitions */}
         <div className="panel">
           <CompetitionBoard />
         </div>
