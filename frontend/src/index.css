@@ -232,10 +232,18 @@ textarea {
   font-weight: 600;
   font-size: var(--text-sm);
   color: var(--color-ink);
+  border-bottom: 2px solid transparent;
+  padding-bottom: 3px;
 }
+
 .navbar__profile-link:hover {
   text-decoration: none;
   color: var(--color-accent-strong);
+}
+
+.navbar__profile-link--active {
+  color: var(--color-accent-strong);
+  border-bottom-color: var(--color-accent);
 }
 
 .navbar__auth-links {
@@ -388,6 +396,12 @@ textarea {
 .btn-outline:hover {
   border-color: var(--color-ink-muted);
   background-color: var(--color-surface-sunken);
+}
+
+.btn-outline--danger:hover {
+  border-color: var(--color-down);
+  background-color: var(--color-down-tint);
+  color: var(--color-down);
 }
 
 .btn-ghost {
