@@ -28,9 +28,9 @@ const Home = ({ activeFeed }) => {
     try {
       const token = localStorage.getItem('accessToken');
 
-      const endpoint = feedType === 'global'
-        ? `http://localhost:3001/api/posts/feed?page=${pageNum}`
-        : `http://localhost:3001/api/posts/feed/following?page=${pageNum}`;
+      const endpoint = feedType === 'following'
+        ? `http://localhost:3001/api/posts/feed/following?page=${pageNum}`
+        : `http://localhost:3001/api/posts/feed?page=${pageNum}`;
 
       const response = await fetch(endpoint, {
         headers: {

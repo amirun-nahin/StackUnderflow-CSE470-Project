@@ -42,6 +42,12 @@ const CreateGroup = () => {
 
   return (
     <div className="page-container">
+      <button
+        onClick={() => navigate("/groups")}
+        className="btn-ghost back-link"
+      >
+        &larr; Back to Groups
+      </button>
       <div className="form-container">
         <h2>Create a Group</h2>
         {errorMessage && <p className="error-text">{errorMessage}</p>}

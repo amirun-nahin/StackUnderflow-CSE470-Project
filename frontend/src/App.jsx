@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  Navigate,
+} from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -36,7 +42,11 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
   return (
     <nav className="navbar">
       <div className="navbar__left">
-        <Link to="/" className="navbar__brand">
+        <Link
+          to="/"
+          className="navbar__brand"
+          onClick={() => setActiveFeed("global")}
+        >
           stackUnderflow
         </Link>
 
@@ -86,11 +96,12 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
           <>
             <Link
               to={`/profile/${myUsername}`}
-              className="navbar__profile-link"
+              className={`navbar__profile-link ${activeFeed === "profile" ? "navbar__profile-link--active" : ""}`}
+              onClick={() => setActiveFeed("profile")}
             >
               Profile
             </Link>
-            <button onClick={handleLogout} className="btn btn-outline btn-sm">
+            <button onClick={handleLogout} className="btn btn-outline btn-outline--danger btn-sm">
               Logout
             </button>
           </>
