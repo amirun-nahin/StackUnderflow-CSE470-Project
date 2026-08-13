@@ -6,6 +6,8 @@ import BountyBoard from '../components/BountyBoard';
 import CompetitionBoard from '../components/CompetitionBoard';
 import TechNewsCard from '../components/TechNewsCard';
 import ActiveJobsCard from '../components/ActiveJobsCard';
+import DailyQuizCard from '../components/DailyQuizCard';
+
 const Home = ({ activeFeed }) => {
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
@@ -145,11 +147,8 @@ const Home = ({ activeFeed }) => {
 
       {/* RIGHT SIDEBAR: Quizzes / Challenges & Bounties */}
       <aside className="right-sidebar">
-        {/* Card 1: Trending Challenges */}
-        <div className="panel">
-          <h3>Trending Challenges</h3>
-          <p>Daily Wordle coming soon...</p>
-        </div>
+        {/* Card 1: Daily Quiz Mini-Game */}
+        <DailyQuizCard />
 
         {/* Card 2: Micro-Bounty Board */}
         <div className="panel">
