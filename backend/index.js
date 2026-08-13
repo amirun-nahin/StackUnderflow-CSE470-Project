@@ -14,6 +14,7 @@ const Group = require('./models/Group');
 const GroupMember = require('./models/GroupMember');
 const Message = require('./models/Message');
 const SavedNews = require('./models/SavedNews');
+const QuizAttempt = require('./models/QuizAttempt');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -52,6 +53,9 @@ app.use('/api/news', newsRoutes);
 
 const jobRoutes = require('./routes/jobs');
 app.use('/api/jobs', jobRoutes);
+
+const quizRoutes = require('./routes/quiz');
+app.use('/api/quiz', quizRoutes);
 
 // Fallback Route
 app.get('/', (req, res) => {
@@ -118,6 +122,10 @@ Message.belongsTo(User, { as: 'Receiver', foreignKey: 'ReceiverId' });
 // Saved News
 User.hasMany(SavedNews);
 SavedNews.belongsTo(User);
+
+// Daily Quiz Attempts
+User.hasMany(QuizAttempt);
+QuizAttempt.belongsTo(User);
 
 // Database Sync and Server Start
 sequelize.sync().then(() => {

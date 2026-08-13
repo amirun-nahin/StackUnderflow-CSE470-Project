@@ -15,28 +15,27 @@ const Login = () => {
         body: JSON.stringify(values),
       });
 
-      // 'result' holds the data coming BACK from the server (including the token)
+      // 'result' holds the data coming back from the server (including the token)
       const result = await response.json();
 
       if (response.ok) {
         const actualToken = result.token || result.accessToken;
 
         if (!actualToken) {
-            setFieldError("email", "Login succeeded, but no token was received.");
-            return;
+          setFieldError("email", "Login succeeded, but no token was received.");
+          return;
         }
 
         // Save the correct token
-        localStorage.setItem('accessToken', actualToken);
-        localStorage.setItem('username', result.username);
+        localStorage.setItem("accessToken", actualToken);
+        localStorage.setItem("username", result.username);
 
         // Force a hard browser reload so the Navbar updates instantly
-        window.location.href = '/';
+        window.location.href = "/";
       } else {
         // Use Formik's built-in error handler instead of 'setError'
-        setFieldError("email", result.error || 'Login failed');
+        setFieldError("email", result.error || "Login failed");
       }
-
     } catch (error) {
       console.error("Network error:", error);
       alert("Could not connect to the server.");
@@ -46,46 +45,63 @@ const Login = () => {
   };
 
   return (
-    <div className="form-container">
-      <h2>Login to StackUnderflow</h2>
+    <div className="auth-fullscreen">
+      <div className="auth-showcase">
+        <img src="logo.png" alt="StackUnderflow Logo" />
+      </div>
 
-      <Formik
-        initialValues={{ email: "", password: "" }}
-        validationSchema={validationSchema}
-        onSubmit={onSubmit}
-      >
-        {({ isSubmitting }) => (
-          <Form className="auth-form">
-            <div className="input-group">
-              <label>Email</label>
-              <Field
-                type="email"
-                name="email"
-                placeholder="coder@example.com"
-              />
-              <ErrorMessage
-                name="email"
-                component="span"
-                className="error-text"
-              />
-            </div>
+      <div className="auth-form-zone">
+        <div className="auth-form-content">
+          <h2>Welcome back.</h2>
+          <p className="auth-subtitle">&gt; Authenticate to continue</p>
 
-            <div className="input-group">
-              <label>Password</label>
-              <Field type="password" name="password" placeholder="********" />
-              <ErrorMessage
-                name="password"
-                component="span"
-                className="error-text"
-              />
-            </div>
+          <Formik
+            initialValues={{ email: "", password: "" }}
+            validationSchema={validationSchema}
+            onSubmit={onSubmit}
+          >
+            {({ isSubmitting }) => (
+              <Form className="auth-form">
+                <div className="input-group">
+                  <label>Email</label>
+                  <Field
+                    type="email"
+                    name="email"
+                    placeholder="coder@example.com"
+                  />
+                  <ErrorMessage
+                    name="email"
+                    component="span"
+                    className="error-text"
+                  />
+                </div>
 
-            <button type="submit" className="btn btn-primary btn-block" disabled={isSubmitting}>
-              {isSubmitting ? "Logging in..." : "Login"}
-            </button>
-          </Form>
-        )}
-      </Formik>
+                <div className="input-group">
+                  <label>Password</label>
+                  <Field
+                    type="password"
+                    name="password"
+                    placeholder="********"
+                  />
+                  <ErrorMessage
+                    name="password"
+                    component="span"
+                    className="error-text"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-block"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Logging in..." : "Login"}
+                </button>
+              </Form>
+            )}
+          </Formik>
+        </div>
+      </div>
     </div>
   );
 };
