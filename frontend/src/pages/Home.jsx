@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import PostCard from '../components/PostCard';
 import CreatePost from '../components/CreatePost';
 import { useNavigate, Link } from 'react-router-dom';
-import BountyBoard from '../components/BountyBoard';
-import CompetitionBoard from '../components/CompetitionBoard';
 import TechNewsCard from '../components/TechNewsCard';
 import ActiveJobsCard from '../components/ActiveJobsCard';
 import DailyQuizCard from '../components/DailyQuizCard';
@@ -117,10 +115,7 @@ const Home = ({ activeFeed }) => {
         {/* Card 3: Active Jobs */}
         <ActiveJobsCard />
 
-        {/* Card 3: Competitions */}
-        <div className="panel">
-          <CompetitionBoard />
-        </div>
+
       </aside>
 
       {/* CENTER: Feed & Post Creation */}
@@ -150,11 +145,7 @@ const Home = ({ activeFeed }) => {
         {/* Card 1: Daily Quiz Mini-Game */}
         <DailyQuizCard />
 
-        {/* Card 2: Micro-Bounty Board */}
-        <div className="panel">
-          <h3 className="bounty-board-heading">Micro-Bounty Board</h3>
-          <BountyBoard />
-        </div>
+
       </aside>
     </div>
   );

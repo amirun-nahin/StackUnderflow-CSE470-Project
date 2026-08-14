@@ -128,6 +128,9 @@ router.post('/:competitionId/submit', validateToken, async (req, res) => {
 
         const competition = await getCompetitionOr404(competitionId, res);
         if (!competition) return;
+        if (competition.UserId === req.user.id) {
+            return res.status(403).json({ error: 'You cannot submit a solution to a competition you are hosting' });
+        }
 
         const phase = getPhase(competition);
         if (phase === 'UPCOMING') {
@@ -202,6 +205,10 @@ router.put('/submission/:submissionId/evaluate', validateToken, async (req, res)
             return res.status(400).json({ error: 'score is required' });
         }
 
+        const parsedScore = Number(score);
+        if (!Number.isFinite(parsedScore) || parsedScore < 0) {
+            return res.status(400).json({ error: 'score must be a non-negative number' });
+        }        
         const submission = await CompetitionSubmission.findByPk(submissionId, {
             include: [{ model: Competition }]
         });
@@ -217,6 +224,11 @@ router.put('/submission/:submissionId/evaluate', validateToken, async (req, res)
         if (phase === 'ACTIVE') {
             return res.status(403).json({ error: 'Cannot evaluate submissions while the competition is still active' });
         }
+        if (submission.status === 'EVALUATED') {
+            return res.status(400).json({ error: 'Submission has already been evaluated' });
+        }
+
+        submission.score = parsedScore;
 
         submission.score = score;
         submission.time_complexity = time_complexity || null;
