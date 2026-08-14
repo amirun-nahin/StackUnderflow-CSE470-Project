@@ -20,6 +20,7 @@ const DuelQuestion = require('./models/DuelQuestion');
 const DuelSubmission = require('./models/DuelSubmission');
 const Notification = require('./models/Notification');
 const QuizAttempt = require('./models/QuizAttempt');
+const RepoRequestJoin = require('./models/RepoRequestJoin');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -67,6 +68,12 @@ app.use('/api/notifications', notificationRoutes);
 
 const quizRoutes = require('./routes/quiz');
 app.use('/api/quiz', quizRoutes);
+
+const githubRoutes = require('./routes/github');
+app.use('/api/github', githubRoutes);
+
+const repoRequestRoutes = require('./routes/repoRequest');
+app.use('/api/repo-request', repoRequestRoutes);
 
 // Fallback Route
 app.get('/', (req, res) => {
@@ -153,6 +160,12 @@ DuelSubmission.belongsTo(DuelQuestion);
 
 User.hasMany(Notification);
 Notification.belongsTo(User);
+
+// Open-Source Collaboration: Repository Request join/leave
+User.hasMany(RepoRequestJoin);
+RepoRequestJoin.belongsTo(User);
+Post.hasMany(RepoRequestJoin);
+RepoRequestJoin.belongsTo(Post);
 
 // Daily Quiz Attempts
 User.hasMany(QuizAttempt);

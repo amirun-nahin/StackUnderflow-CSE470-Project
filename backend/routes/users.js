@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Post = require('../models/Post');
+const RepoRequestJoin = require('../models/RepoRequestJoin');
 const BountyEnrollment = require('../models/BountyEnrollment');
 const BountySubmission = require('../models/BountySubmission');
 const Competition = require('../models/Competition');
@@ -31,11 +32,15 @@ router.get('/:username', validateToken, async (req, res) => {
     try {
         const user = await User.findOne({ 
             where: { username: req.params.username },
-            attributes: { exclude: ['password'] }, 
+            attributes: { exclude: ['password', 'github_access_token'] },
             include: [
-                { model: Post , include: [{model: Vote}, {model: Comment}]},
-                { model: User, as: 'Followers', attributes: ['id', 'username'] },
-                { model: User, as: 'Following', attributes: ['id', 'username'] },
+                { 
+                    model: Post , 
+                    include: [
+                        {model: Vote}, {model: Comment}, 
+                        {model: RepoRequestJoin, 
+                            include: [{ model: User, attributes: ['id', 'username', 'profile_picture'] }]}]
+                },
                 {
                     model: BountyEnrollment,
                     include: [{ model: Post, attributes: ['id', 'text_content', 'category', 'bounty_status'] }]

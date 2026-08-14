@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import PostCard from '../components/PostCard';
+import GitHubConnect from '../components/GitHubConnect';
 
 const parseTechStack = (tech) => {
     if (!tech) return [];
@@ -243,6 +244,11 @@ const Profile = () => {
                                 <p className="profile-field__value">{profile.address || "Not specified"}</p>
                             </div>
                         </div>
+                        <GitHubConnect
+                            isMyProfile={isMyProfile}
+                            profileGithubUsername={profile.github_username}
+                            token={token}
+                        />
                     </div>
                 ) : (
                     <form onSubmit={handleSave} className="profile-edit-form">

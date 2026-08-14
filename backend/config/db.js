@@ -11,5 +11,7 @@ const sequelize = new Sequelize(
         logging: false, 
     }
 );
-
+// sequelize.sync({ alter: true }) // Updates tables to match models without dropping them
+//   .then(() => console.log('Database synced'))
+//   .catch((err) => console.error(err));
 module.exports = sequelize;

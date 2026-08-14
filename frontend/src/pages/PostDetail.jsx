@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import PostCard from '../components/PostCard';
 import CommentNode from '../components/CommentNode';
 
@@ -158,6 +158,26 @@ const PostDetail = () => {
             </button>
 
             <PostCard post={post} isDetailView={true} />
+
+            {post.category === "REPO_REQUEST" && (
+                <div className="repo-members-panel panel">
+                    <h3>Joined Developers</h3>
+                    {post.RepoRequestJoins && post.RepoRequestJoins.length > 0 ? (
+                        <div className="repo-members-list">
+                            {post.RepoRequestJoins.map((join) => (
+                                <div key={join.UserId} className="repo-member-row">
+                                    <div className="avatar-circle avatar-circle--sm">🧑‍💻</div>
+                                    <Link to={`/profile/${join.User?.username}`} className="post-author">
+                                        {join.User?.username || 'Unknown User'}
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="empty-state">No one has joined this repository request yet.</p>
+                    )}
+                </div>
+            )}
 
             <div className="comments-section panel">
                 <h3>Discussion</h3>

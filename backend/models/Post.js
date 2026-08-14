@@ -11,7 +11,7 @@ const Post = sequelize.define('Post', {
         allowNull: true,
     },
     category: {
-        type: DataTypes.ENUM('NORMAL', 'PEER_REVIEW', 'COLLAB_SLOT', 'MICRO_BOUNTY'),
+        type: DataTypes.ENUM('NORMAL', 'PEER_REVIEW', 'COLLAB_SLOT', 'MICRO_BOUNTY', 'REPO_REQUEST'),
         defaultValue: 'NORMAL',
         allowNull: false
     },
@@ -36,7 +36,15 @@ const Post = sequelize.define('Post', {
     GroupId: {
         type: DataTypes.INTEGER,
         allowNull: true, // Null means it's a global feed post
-    }   
+    },
+    repo_name: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    people_needed: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    }
 });
 
 module.exports = Post;

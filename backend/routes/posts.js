@@ -5,7 +5,7 @@ const User = require('../models/User');
 const Comment = require('../models/Comment');
 const Vote = require('../models/Vote');
 const { validateToken } = require('../middlewares/AuthMiddleware'); 
-
+const RepoRequestJoin = require('../models/RepoRequestJoin');
 
 // Feed Routes
 // Get Global Feed
@@ -23,7 +23,8 @@ router.get('/feed', async (req, res) => {
             include: [
                 { model: User, attributes: ['id', 'username', 'profile_picture'] },
                 { model: Vote },
-                { model: Comment, include: [{ model: User, attributes: ['username'] }] }
+                { model: Comment, include: [{ model: User, attributes: ['username'] }] },
+                { model: RepoRequestJoin, include: [{ model: User, attributes: ['id', 'username', 'profile_picture'] }] }
             ]
         });
         res.json(posts);
@@ -43,7 +44,8 @@ router.get('/feed/following', validateToken, async (req, res) => {
 
         // Use req.user.id set by validateToken
         const currentUser = await User.findByPk(req.user.id, {
-            include: [{ model: User, as: 'Following', attributes: ['id'] }]
+            include: [{ model: User, as: 'Following', attributes: ['id'] },
+            { model: RepoRequestJoin, include: [{ model: User, attributes: ['id', 'username', 'profile_picture'] }] }]
         });
 
         if (!currentUser) {
@@ -88,7 +90,8 @@ router.get('/:postId', async (req, res) => {
                     model: Comment, 
                     include: [{ model: User, attributes: ['username'] }],
                     order: [['createdAt', 'ASC']]
-                }
+                },
+                { model: RepoRequestJoin, include: [{ model: User, attributes: ['id', 'username', 'profile_picture'] }] }
             ]
         });
 
@@ -103,7 +106,17 @@ router.get('/:postId', async (req, res) => {
 // Create a new post
 router.post('/create', validateToken, async (req, res) => {
     try {
-        const { text_content, code_snippet, category, language, bounty_reward_points, bounty_deadline } = req.body;
+        const { text_content, code_snippet, category, language, bounty_reward_points, bounty_deadline, repo_name, people_needed } = req.body;
+
+        // Repository Request posts need a repo name and a people count
+        if (category === 'REPO_REQUEST') {
+            if (!repo_name || !repo_name.trim()) {
+                return res.status(400).json({ error: 'Repository name is required for a Repository Request' });
+            }
+            if (!people_needed || Number(people_needed) < 1) {
+                return res.status(400).json({ error: 'A valid number of people needed is required for a Repository Request' });
+            }
+        }
 
         const newPost = await Post.create({
             text_content,
@@ -112,6 +125,8 @@ router.post('/create', validateToken, async (req, res) => {
             language: language || 'General',
             bounty_reward_points: bounty_reward_points ?? null,
             bounty_deadline: bounty_deadline ?? null,
+            repo_name: category === 'REPO_REQUEST' ? repo_name.trim() : null,
+            people_needed: category === 'REPO_REQUEST' ? Number(people_needed) : null,
             UserId: req.user.id
         });
 
