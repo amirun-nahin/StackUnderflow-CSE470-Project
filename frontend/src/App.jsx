@@ -20,6 +20,9 @@ import CreateGroup from "./pages/CreateGroup";
 import GroupDetail from "./pages/GroupDetail";
 import Chat from "./pages/Chat";
 import NewsReader from "./pages/NewsReader";
+import Challenges from "./pages/Challenges";
+import DuelDetail from "./pages/DuelDetail";
+import NotificationBell from "./components/NotificationBell";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("accessToken");
@@ -87,6 +90,13 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
             >
               Messages
             </Link>
+            <Link                                                          
+              to="/challenges"                                             
+              onClick={() => setActiveFeed("challenges")}                  
+              className={`navbar__tab ${activeFeed === "challenges" ? "navbar__tab--active" : ""}`}
+            >                                                              
+              Competition                                             
+            </Link>
           </div>
         )}
       </div>
@@ -94,6 +104,7 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
       <div className="navbar__right">
         {token ? (
           <>
+            <NotificationBell />
             <Link
               to={`/profile/${myUsername}`}
               className={`navbar__profile-link ${activeFeed === "profile" ? "navbar__profile-link--active" : ""}`}
@@ -225,6 +236,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/challenges"
+          element={
+            <ProtectedRoute>
+              <Challenges />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/duel/:id"
+          element={
+            <ProtectedRoute>
+              <DuelDetail />
+            </ProtectedRoute>
+          }
+        />        
       </Routes>
     </Router>
   );

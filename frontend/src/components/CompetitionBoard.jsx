@@ -16,7 +16,7 @@ const CompetitionBoard = () => {
     const [competitions, setCompetitions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
-    const [expanded, setExpanded] = useState(true);
+
 
     const fetchBoard = async () => {
         try {
@@ -42,17 +42,7 @@ const CompetitionBoard = () => {
 
     return (
         <div className="competition-board">
-            <button
-                type="button"
-                className="competition-board__toggle"
-                onClick={() => setExpanded(!expanded)}
-            >
-                <h3>Coding Competitions</h3>
-                <span>{expanded ? '▾' : '▸'}</span>
-            </button>
-
-            {expanded && (
-                <div className="competition-board__body">
+            
                     <Link to="/host-competition" className="btn btn-outline btn-sm competition-board__host-btn">
                         + Host a Competition
                     </Link>
@@ -88,8 +78,7 @@ const CompetitionBoard = () => {
                         ))}
                     </div>
                 </div>
-            )}
-        </div>
+
     );
 };
 

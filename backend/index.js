@@ -14,6 +14,11 @@ const Group = require('./models/Group');
 const GroupMember = require('./models/GroupMember');
 const Message = require('./models/Message');
 const SavedNews = require('./models/SavedNews');
+const QuestionBank = require('./models/QuestionBank');
+const Duel = require('./models/Duel');
+const DuelQuestion = require('./models/DuelQuestion');
+const DuelSubmission = require('./models/DuelSubmission');
+const Notification = require('./models/Notification');
 const QuizAttempt = require('./models/QuizAttempt');
 
 const app = express();
@@ -53,6 +58,12 @@ app.use('/api/news', newsRoutes);
 
 const jobRoutes = require('./routes/jobs');
 app.use('/api/jobs', jobRoutes);
+
+const duelRoutes = require('./routes/duel');
+app.use('/api/duel', duelRoutes);
+
+const notificationRoutes = require('./routes/notifications');
+app.use('/api/notifications', notificationRoutes);
 
 const quizRoutes = require('./routes/quiz');
 app.use('/api/quiz', quizRoutes);
@@ -122,6 +133,26 @@ Message.belongsTo(User, { as: 'Receiver', foreignKey: 'ReceiverId' });
 // Saved News
 User.hasMany(SavedNews);
 SavedNews.belongsTo(User);
+// 1v1 Coding Duels
+User.hasMany(Duel, { as: 'ChallengesSent', foreignKey: 'ChallengerId' });
+Duel.belongsTo(User, { as: 'Challenger', foreignKey: 'ChallengerId' });
+User.hasMany(Duel, { as: 'ChallengesReceived', foreignKey: 'OpponentId' });
+Duel.belongsTo(User, { as: 'Opponent', foreignKey: 'OpponentId' });
+User.hasMany(Duel, { as: 'DuelsWon', foreignKey: 'WinnerId' });
+Duel.belongsTo(User, { as: 'Winner', foreignKey: 'WinnerId' });
+
+Duel.hasMany(DuelQuestion);
+DuelQuestion.belongsTo(Duel);
+QuestionBank.hasMany(DuelQuestion);
+DuelQuestion.belongsTo(QuestionBank);
+
+User.hasMany(DuelSubmission);
+DuelSubmission.belongsTo(User);
+DuelQuestion.hasMany(DuelSubmission);
+DuelSubmission.belongsTo(DuelQuestion);
+
+User.hasMany(Notification);
+Notification.belongsTo(User);
 
 // Daily Quiz Attempts
 User.hasMany(QuizAttempt);
