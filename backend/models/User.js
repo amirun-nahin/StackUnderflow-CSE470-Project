@@ -90,6 +90,14 @@ const User = sequelize.define('User', {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0
+    },
+    github_username: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    github_access_token: {
+        type: DataTypes.STRING,
+        allowNull: true,
     }    
 });
 

@@ -5,6 +5,8 @@ const PostCard = ({ post, isDetailView = false }) => {
   const [upvotes, setUpvotes] = useState(0);
   const [downvotes, setDownvotes] = useState(0);
   const [userVote, setUserVote] = useState(null);
+  const [joins, setJoins] = useState(post.RepoRequestJoins || []);
+  const [joinLoading, setJoinLoading] = useState(false);
   const navigate = useNavigate();
 
   // --- THE BULLETPROOF TOKEN CHECK ---
@@ -36,6 +38,10 @@ const PostCard = ({ post, isDetailView = false }) => {
       setDownvotes(downs);
     }
   }, [post.Votes, myUserId]);
+
+  useEffect(() => {
+    setJoins(post.RepoRequestJoins || []);
+  }, [post.RepoRequestJoins]);
 
   const handleVote = async (type) => {
     try {
@@ -83,6 +89,43 @@ const PostCard = ({ post, isDetailView = false }) => {
     }
   };
 
+  const hasJoined = joins.some((j) => j.UserId === myUserId);
+  const isOwnRepoRequest = post.UserId === myUserId;
+  const isFull =
+    typeof post.people_needed === "number" && joins.length >= post.people_needed;
+
+  const handleJoinToggle = async () => {
+    if (joinLoading) return;
+    setJoinLoading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/repo-request/${post.id}/join`,
+        {
+          method: hasJoined ? "DELETE" : "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (response.ok) {
+        if (hasJoined) {
+          setJoins(joins.filter((j) => j.UserId !== myUserId));
+        } else {
+          setJoins([
+            ...joins,
+            { UserId: myUserId, User: { id: myUserId, username: localStorage.getItem("username") } },
+          ]);
+        }
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to update join status");
+      }
+    } catch (error) {
+      console.error("Error toggling join status", error);
+    } finally {
+      setJoinLoading(false);
+    }
+  };
+
   // Returns a short key used to drive both the card's category gutter color
   // and the category chip color — same mapping as before, just a shorter
   // token so it can be reused as a CSS modifier in two places.
@@ -94,6 +137,8 @@ const PostCard = ({ post, isDetailView = false }) => {
         return "collab";
       case "MICRO_BOUNTY":
         return "bounty";
+      case "REPO_REQUEST":
+        return "repo";
       default:
         return "normal";
     }
@@ -150,6 +195,16 @@ const PostCard = ({ post, isDetailView = false }) => {
             )}
           </div>
         )}
+        {post.category === "REPO_REQUEST" && (
+          <div className="repo-meta-row">
+            {post.repo_name && (
+              <span className="repo-meta-chip">📦 {post.repo_name}</span>
+            )}
+            <span className={`repo-meta-chip ${isFull ? "repo-meta-chip--full" : ""}`}>
+              👥 {joins.length}/{post.people_needed ?? "?"} joined
+            </span>
+          </div>
+        )}
         {post.code_snippet && (
           <div className="code-block">
             <pre>
@@ -175,6 +230,21 @@ const PostCard = ({ post, isDetailView = false }) => {
         <button className="stat-btn" onClick={handleCommentClick}>
           💬 {post.Comments?.length || 0} Comments
         </button>
+        {post.category === "REPO_REQUEST" && (
+          <div className="post-footer__spacer">
+            {isOwnRepoRequest ? (
+              <span className="repo-meta-chip">Your Request</span>
+            ) : (
+              <button
+                className={`btn btn-sm ${hasJoined ? "btn-outline" : "btn-primary"}`}
+                onClick={handleJoinToggle}
+                disabled={joinLoading || (isFull && !hasJoined)}
+              >
+                {hasJoined ? "Leave" : isFull ? "Full" : "Join"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

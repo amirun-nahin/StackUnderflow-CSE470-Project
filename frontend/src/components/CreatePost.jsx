@@ -8,7 +8,11 @@ const CreatePost = ({ onPostCreated }) => {
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [bountyRewardPoints, setBountyRewardPoints] = useState('');   // ADD
   const [bountyDeadline, setBountyDeadline] = useState(''); 
+  const [repoName, setRepoName] = useState('');
+  const [peopleNeeded, setPeopleNeeded] = useState('');
   const isBounty = category === 'MICRO_BOUNTY';
+  const isRepoRequest = category === 'REPO_REQUEST';
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +31,8 @@ const CreatePost = ({ onPostCreated }) => {
           category: category,
           language: language, // <-- SENDING TO BACKEND
           ...(isBounty && bountyRewardPoints ? { bounty_reward_points: Number(bountyRewardPoints) } : {}),
-          ...(isBounty && bountyDeadline ? { bounty_deadline: bountyDeadline } : {})
+          ...(isBounty && bountyDeadline ? { bounty_deadline: bountyDeadline } : {}),
+          ...(isRepoRequest ? { repo_name: repoName, people_needed: Number(peopleNeeded) } : {})
         })
       });
 
@@ -44,6 +49,8 @@ const CreatePost = ({ onPostCreated }) => {
       setLanguage('General');
       setBountyRewardPoints('');
       setBountyDeadline('');
+      setRepoName('');
+      setPeopleNeeded('');
     } catch (error) {
       console.error("Error creating post:", error);
     }
@@ -64,6 +71,7 @@ const CreatePost = ({ onPostCreated }) => {
               <option value="PEER_REVIEW">Peer Review Request</option>
               <option value="COLLAB_SLOT">Collaboration Slot</option>
               <option value="MICRO_BOUNTY">Micro-Bounty</option>
+              <option value="REPO_REQUEST">Repository Request</option>
             </select>
 
             <select
@@ -104,9 +112,36 @@ const CreatePost = ({ onPostCreated }) => {
             </div>
           </div>
         )}
+        {isRepoRequest && (
+          <div className="create-post-selects">
+            <div className="input-group">
+              <label>Repository Name</label>
+              <input
+                type="text"
+                className="select-input"
+                placeholder="e.g. octocat/hello-world"
+                value={repoName}
+                onChange={(e) => setRepoName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="input-group">
+              <label>People Needed</label>
+              <input
+                type="number"
+                min="1"
+                className="select-input"
+                placeholder="e.g. 3"
+                value={peopleNeeded}
+                onChange={(e) => setPeopleNeeded(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+        )}
         <textarea
           className="post-textarea"
-          placeholder={isBounty ? "Describe the bounty challenge..." : "What is the challenge?"}
+          placeholder={isBounty ? "Describe the bounty challenge..." : isRepoRequest ? "Briefly describe what you need help with..." : "What is the challenge?"}
           value={text}
           onChange={(e) => setText(e.target.value)}
           required
@@ -130,7 +165,7 @@ const CreatePost = ({ onPostCreated }) => {
             {showCodeInput ? '- Remove Code' : '+ Add Code Snippet'}
           </button>
 
-          <button type="submit" className="btn btn-primary" disabled={!text}>
+          <button type="submit" className="btn btn-primary" disabled={!text || (isRepoRequest && (!repoName.trim() || !peopleNeeded))}>
             Post
           </button>
         </div>

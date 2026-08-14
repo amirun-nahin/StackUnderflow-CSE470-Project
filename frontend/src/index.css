@@ -44,6 +44,8 @@
   --color-cat-collab-tint: #f1eafe;
   --color-cat-bounty: #b45309;
   --color-cat-bounty-tint: #fdf1da;
+  --color-cat-repo: #065f46;
+  --color-cat-repo-tint: #e3f6ec;
 
   /* Code block (dark chip inside light cards) */
   --color-code-bg: #1b1e24;
@@ -661,7 +663,9 @@ textarea {
 .post-card--bounty {
   border-left-color: var(--color-cat-bounty);
 }
-
+.post-card--repo {
+  border-left-color: var(--color-cat-repo);
+}
 .post-header {
   display: flex;
   justify-content: space-between;
@@ -725,7 +729,10 @@ textarea {
   background-color: var(--color-cat-bounty-tint);
   color: var(--color-cat-bounty);
 }
-
+.category-chip--repo {
+  background-color: var(--color-cat-repo-tint);
+  color: var(--color-cat-repo);
+}
 .post-body {
   margin-bottom: var(--space-4);
 }
@@ -786,6 +793,31 @@ textarea {
 }
 .stat-btn--down.stat-btn--active {
   color: var(--color-down);
+  background-color: var(--color-down-tint);
+}
+.post-footer__spacer {
+  margin-left: auto;
+}
+
+.repo-meta-row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+.repo-meta-chip {
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  background-color: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink-muted);
+}
+.repo-meta-chip--full {
+  color: var(--color-down);
+  border-color: var(--color-down);
   background-color: var(--color-down-tint);
 }
 
@@ -1939,3 +1971,168 @@ textarea {
   color: var(--color-down);
 }
 
+/* -------------------------------------------------------------------------
+   20. GitHub Open-Source Collaboration (profile panel + modals)
+   ------------------------------------------------------------------------- */
+.github-panel {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.github-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.github-status-badge {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  border: 1px solid;
+}
+.github-status-badge--connected {
+  color: var(--color-up);
+  border-color: var(--color-up);
+  background-color: var(--color-up-tint);
+}
+.github-status-badge--disconnected {
+  color: var(--color-ink-muted);
+  border-color: var(--color-border-strong);
+}
+
+.github-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.github-error {
+  color: var(--color-down);
+  font-size: var(--text-sm);
+  margin-top: var(--space-2);
+}
+
+.github-repo-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.github-repo-item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+.github-repo-item__name {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+}
+.github-repo-item__name:hover {
+  color: var(--color-accent-strong);
+}
+.github-repo-item__desc {
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+  margin-top: var(--space-1);
+}
+.github-repo-item__meta {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+}
+
+/* -------------------------------------------------------------------------
+   21. Modals (GitHub connect, repository list)
+   ------------------------------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(28, 27, 24, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 1000;
+}
+
+.modal {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+.modal--wide {
+  max-width: 520px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+.modal-header h3 {
+  margin-bottom: 0;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: var(--text-lg);
+  line-height: 1;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  padding: var(--space-1);
+}
+.modal-close-btn:hover {
+  color: var(--color-ink);
+}
+
+.modal-hint {
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+  margin-bottom: var(--space-4);
+  line-height: 1.5;
+}
+
+/* -------------------------------------------------------------------------
+   22. Repository Request — joined members (post detail)
+   ------------------------------------------------------------------------- */
+.repo-members-panel {
+  margin-top: var(--space-5);
+}
+
+.repo-members-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.repo-member-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.repo-member-row:last-child {
+  border-bottom: none;
+}
