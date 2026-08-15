@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
-const PostCard = ({ post, isDetailView = false }) => {
+const PostCard = ({ post, isDetailView = false, onRepoJoinChange }) => {
   const [upvotes, setUpvotes] = useState(0);
   const [downvotes, setDownvotes] = useState(0);
   const [userVote, setUserVote] = useState(null);
@@ -107,14 +107,20 @@ const PostCard = ({ post, isDetailView = false }) => {
       );
 
       if (response.ok) {
+        let updatedJoins;
         if (hasJoined) {
-          setJoins(joins.filter((j) => j.UserId !== myUserId));
+          updatedJoins = joins.filter((j) => j.UserId !== myUserId);
         } else {
-          setJoins([
+          updatedJoins = [
             ...joins,
             { UserId: myUserId, User: { id: myUserId, username: localStorage.getItem("username") } },
-          ]);
+          ];
         }
+        setJoins(updatedJoins);
+        // Let a parent page (e.g. PostDetail, which keeps its own separate
+        // copy of this post's data for the joined-members list) know right
+        // away instead of only updating this card's own local state.
+        if (onRepoJoinChange) onRepoJoinChange(updatedJoins);
       } else {
         const data = await response.json();
         alert(data.error || "Failed to update join status");

@@ -23,6 +23,7 @@ import NewsReader from "./pages/NewsReader";
 import Challenges from "./pages/Challenges";
 import DuelDetail from "./pages/DuelDetail";
 import NotificationBell from "./components/NotificationBell";
+import SearchBar from "./components/SearchBar";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("accessToken");
@@ -127,6 +128,7 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
           </div>
         )}
       </div>
+      <SearchBar />
     </nav>
   );
 };
