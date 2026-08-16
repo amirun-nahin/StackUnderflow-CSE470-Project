@@ -157,7 +157,13 @@ const PostDetail = () => {
                 &larr; Back to Feed
             </button>
 
-            <PostCard post={post} isDetailView={true} />
+            <PostCard
+                post={post}
+                isDetailView={true}
+                onRepoJoinChange={(updatedJoins) =>
+                    setPost((prev) => ({ ...prev, RepoRequestJoins: updatedJoins }))
+                }
+            />
 
             {post.category === "REPO_REQUEST" && (
                 <div className="repo-members-panel panel">

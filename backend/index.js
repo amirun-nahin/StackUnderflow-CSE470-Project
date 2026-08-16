@@ -75,6 +75,9 @@ app.use('/api/github', githubRoutes);
 const repoRequestRoutes = require('./routes/repoRequest');
 app.use('/api/repo-request', repoRequestRoutes);
 
+const searchRoutes = require('./routes/search');
+app.use('/api/search', searchRoutes);
+
 // Fallback Route
 app.get('/', (req, res) => {
     res.send("StackUnderflow API is running!");
