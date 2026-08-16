@@ -6,6 +6,8 @@ const Comment = require('../models/Comment');
 const Vote = require('../models/Vote');
 const { validateToken } = require('../middlewares/AuthMiddleware'); 
 const RepoRequestJoin = require('../models/RepoRequestJoin');
+const Group = require('../models/Group');
+const GroupMember = require('../models/GroupMember');
 
 // Feed Routes
 // Get Global Feed
@@ -79,7 +81,7 @@ router.get('/feed/following', validateToken, async (req, res) => {
 
 
 // Get Single Post
-router.get('/:postId', async (req, res) => {
+router.get('/:postId', validateToken, async (req, res) => {
     try {   
         const { postId } = req.params;
         const post = await Post.findByPk(postId, {
@@ -96,6 +98,18 @@ router.get('/:postId', async (req, res) => {
         });
 
         if (!post) return res.status(404).json({ error: 'Post not found' });
+        // If this post belongs to a private group, only approved members can view it
+        if (post.GroupId) {
+            const group = await Group.findByPk(post.GroupId);
+            if (group && group.is_private) {
+                const member = await GroupMember.findOne({
+                    where: { GroupId: group.id, UserId: req.user.id, status: 'APPROVED' }
+                });
+                if (!member) {
+                    return res.status(403).json({ error: 'This post belongs to a private group. Access denied.' });
+                }
+            }
+        }
         res.json(post);
     } catch (error) {
         console.error("Error fetching single post:", error);

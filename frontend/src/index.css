@@ -2141,14 +2141,13 @@ textarea {
    23. Advanced Search (Ctrl+F search bar)
    ------------------------------------------------------------------------- */
 .search-bar-wrapper {
-  position: absolute;
-  top: 100%;
+  position: fixed;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
   padding: var(--space-4);
-  z-index: 90;
+  z-index: 200;
 }
 
 .search-bar-panel {

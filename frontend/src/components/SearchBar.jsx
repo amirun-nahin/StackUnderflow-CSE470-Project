@@ -43,6 +43,7 @@ const SearchBar = () => {
     const [hasSearched, setHasSearched] = useState(false);
     const [loading, setLoading] = useState(false);
     const [mainResults, setMainResults] = useState([]);
+    const [topOffset, setTopOffset] = useState(72);
     const [userResults, setUserResults] = useState([]);
 
     const isDisabledPage = DISABLED_PATHS.includes(location.pathname);
@@ -56,7 +57,11 @@ const SearchBar = () => {
         setUserResults([]);
         setRawQuery('');
     }, []);
-
+    useEffect(() => {
+        const nav = document.querySelector('.navbar');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (nav) setTopOffset(nav.getBoundingClientRect().height);
+    }, []);
     // Ctrl+F / Cmd+F opens the bar (and refocuses it if already open); Esc closes it.
     useEffect(() => {
         if (isDisabledPage) return;
@@ -152,7 +157,7 @@ const SearchBar = () => {
     if (isDisabledPage || !isOpen) return null;
 
     return (
-        <div className="search-bar-wrapper">
+        <div className="search-bar-wrapper" style={{ top: topOffset }}>
             <div className="search-bar-panel">
                 <form className="search-bar-input-row" onSubmit={handleSubmit}>
                     <input

@@ -109,7 +109,10 @@ router.get('/', validateToken, async (req, res) => {
 
         const posts = await Post.findAll({
             subQuery: false,
-            where: andParts.length ? { [Op.and]: andParts } : {},
+            where: {
+                GroupId: null,
+                ...(andParts.length ? { [Op.and]: andParts } : {})
+            },
             include: [{ model: User, attributes: ['id', 'username', 'profile_picture'] }],
             order: [['createdAt', 'DESC']],
             limit: RESULT_LIMIT

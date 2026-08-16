@@ -40,6 +40,7 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("username");
+    localStorage.removeItem("recentSearches");
     window.location.href = "/login";
   };
 
@@ -128,7 +129,6 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
           </div>
         )}
       </div>
-      <SearchBar />
     </nav>
   );
 };
@@ -139,6 +139,7 @@ function App() {
   return (
     <Router>
       <NavigationBar activeFeed={activeFeed} setActiveFeed={setActiveFeed} />
+      <SearchBar />
       <Routes>
         <Route
           path="/"
