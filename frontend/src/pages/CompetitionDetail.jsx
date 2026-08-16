@@ -8,28 +8,27 @@ const CompetitionDetail = () => {
     const [competition, setCompetition] = useState(null);
     const [leaderboard, setLeaderboard] = useState([]);
     const [submissions, setSubmissions] = useState(null);
+    const [mySubmission, setMySubmission] = useState(null);
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
 
     const [submissionCode, setSubmissionCode] = useState('');
     const [submitting, setSubmitting] = useState(false);
-
-    const [reviewDrafts, setReviewDrafts] = useState({});
-
     const token = localStorage.getItem('accessToken');
     let myUserId = null;
     if (token && token !== 'undefined' && token !== 'null' && token.includes('.')) {
         try {
-            myUserId = JSON.parse(atob(token.split('.')[1])).id;
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            myUserId = payload.id ?? payload.userId ?? payload.sub;
         } catch (error) {
             console.error('Corrupted token found, ignoring safely.', error);
         }
     }
 
-    const isHost = competition && myUserId === competition.User?.id;
+    const hostId = competition?.User?.id ?? competition?.UserId ?? competition?.user_id ?? competition?.host_id;
+    const isHost = Boolean(hostId && myUserId && String(myUserId) === String(hostId));
     const hasQuestion = competition ? Object.prototype.hasOwnProperty.call(competition, 'question_content') : false;
-
     const authHeaders = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -73,20 +72,46 @@ const CompetitionDetail = () => {
         const data = await fetchCompetition();
         await fetchLeaderboard();
 
-        if (data && myUserId === data.User?.id) {
-            try {
-                const subsRes = await fetch(`http://localhost:3001/api/competition/${id}/submissions`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (subsRes.ok) {
-                    const subsData = await subsRes.json();
-                    setSubmissions(subsData);
-                } else {
-                    const errData = await subsRes.json().catch(() => ({}));
-                    setErrorMessage(errData.error || 'Failed to load submissions.');
+        if (data) {
+            const amHost = myUserId === data.User?.id;
+
+            // Host-only review list — only fetchable (and shown) once the
+            // submission window has closed; asking earlier is a 403.
+            if (amHost && data.phase === 'CLOSED') {
+                try {
+                    const subsRes = await fetch(`http://localhost:3001/api/competition/${id}/submissions`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (subsRes.ok) {
+                        const subsData = await subsRes.json();
+                        setSubmissions(subsData);
+                    } else {
+                        const errData = await subsRes.json().catch(() => ({}));
+                        setErrorMessage(errData.error || 'Failed to load submissions.');
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch submissions', error);
                 }
-            } catch (error) {
-                console.error('Failed to fetch submissions', error);
+            }
+
+            // Participant's own submission/result — 404 just means "haven't
+            // submitted", not an error.
+            if (!amHost) {
+                try {
+                    const mySubRes = await fetch(`http://localhost:3001/api/competition/${id}/my-submission`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (mySubRes.ok) {
+                        const mySubData = await mySubRes.json();
+                        setMySubmission(mySubData);
+                    } else if (mySubRes.status === 404) {
+                        setMySubmission(null);
+                    } else {
+                        console.error('Failed to load your submission status');
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch my submission', error);
+                }
             }
         }
         setLoading(false);
@@ -111,6 +136,7 @@ const CompetitionDetail = () => {
             });
             if (response.ok) {
                 setStatusMessage('Submission saved.');
+                fetchAll();
             } else {
                 const errData = await response.json().catch(() => ({}));
                 setErrorMessage(errData.error || 'Could not submit your code.');
@@ -136,6 +162,15 @@ const CompetitionDetail = () => {
             setErrorMessage('A score is required to evaluate a submission.');
             return;
         }
+
+        // Clamp/validate 0-10 client-side so a bad value never round-trips
+        // to the server just to come back as a 400.
+        const scoreNum = Number(draft.score);
+        if (Number.isNaN(scoreNum) || scoreNum < 0 || scoreNum > 10) {
+            setErrorMessage('Score must be a number between 0 and 10.');
+            return;
+        }
+
         setErrorMessage('');
         setStatusMessage('');
         try {
@@ -143,7 +178,7 @@ const CompetitionDetail = () => {
                 method: 'PUT',
                 headers: authHeaders,
                 body: JSON.stringify({
-                    score: Number(draft.score),
+                    score: scoreNum,
                     time_complexity: draft.time_complexity || undefined,
                     feedback: draft.feedback || undefined
                 })
@@ -170,24 +205,22 @@ const CompetitionDetail = () => {
                 &larr; Back
             </button>
 
-            <div className="competition-detail-header panel">
-                <div className="competition-card__title-row">
-                    <h1 className="competition-detail-title">{competition.title}</h1>
-                    <span className={`competition-phase-chip competition-phase-chip--${competition.phase.toLowerCase()}`}>
-                        {competition.phase}
-                    </span>
-                </div>
-                <p className="competition-card__meta">
-                    Hosted by {competition.User?.username} • {competition.language}
-                </p>
+            <div className="panel group-detail-header">
+                <h1 className="discover-heading">{competition.title}</h1>
                 {competition.description && (
                     <p className="post-text">{competition.description}</p>
                 )}
-                <p className="competition-card__meta">
-                    Starts {new Date(competition.start_time).toLocaleString()} • Duration {competition.duration_minutes} min
-                </p>
-                <p className="competition-card__participants">
-                    {competition.participant_count || 0} participants
+                <div className="group-detail-badges">
+                    <span className="lang-chip">{competition.language}</span>
+                    <span className={`category-chip category-chip--${competition.phase.toLowerCase()}`}>
+                        {competition.phase}
+                    </span>
+                    <span className="category-chip category-chip--normal">
+                        {competition.participant_count || 0} participants
+                    </span>
+                </div>
+                <p className="discover-card__meta">
+                    Hosted by {competition.User?.username} • Starts {new Date(competition.start_time).toLocaleString()} • {competition.duration_minutes} min
                 </p>
             </div>
 
@@ -219,18 +252,49 @@ const CompetitionDetail = () => {
                 </div>
             )}
 
+            {!isHost && mySubmission && (
+                <div className="bounty-detail-section panel">
+                    <h3>Your Result</h3>
+                    <div className="post-header__identity">
+                        <span className={`category-chip category-chip--${mySubmission.status === 'EVALUATED' ? 'completed' : 'pending'}`}>
+                            {mySubmission.status === 'EVALUATED' ? 'Evaluated' : 'Waiting for review'}
+                        </span>
+                    </div>
+
+                    {mySubmission.status === 'EVALUATED' ? (
+                        <p className="post-text">
+                            Score: {mySubmission.score} / 10
+                            {mySubmission.time_complexity ? ` • ${mySubmission.time_complexity}` : ''}
+                            {mySubmission.feedback ? ` — ${mySubmission.feedback}` : ''}
+                        </p>
+                    ) : (
+                        <p className="empty-state">
+                            Your submission is in — the host hasn't reviewed it yet.
+                        </p>
+                    )}
+
+                    <a href="#leaderboard" className="btn btn-outline btn-sm">
+                        View Leaderboard
+                    </a>
+                </div>
+            )}
+
             {isHost && (
                 <div className="bounty-detail-section panel">
                     <h3>Review Submissions</h3>
 
-                    {submissions && submissions.length > 0 ? (
+                    {competition.phase !== 'CLOSED' ? (
+                        <p className="empty-state">
+                            Review opens once the submission window closes.
+                        </p>
+                    ) : submissions && submissions.length > 0 ? (
                         <div className="bounty-detail__submissions">
                             {submissions.map(submission => (
                                 <div key={submission.id} className="bounty-submission panel">
                                     <div className="post-header__identity">
                                         <div className="avatar-circle avatar-circle--sm">🧑‍💻</div>
                                         <strong>{submission.User?.username}</strong>
-                                        <span className={`category-chip category-chip--${submission.status === 'EVALUATED' ? 'collab' : 'bounty'}`}>
+                                        <span className={`category-chip category-chip--${submission.status === 'EVALUATED' ? 'completed' : 'pending'}`}>
                                             {submission.status}
                                         </span>
                                     </div>
@@ -241,17 +305,18 @@ const CompetitionDetail = () => {
 
                                     {submission.status === 'EVALUATED' ? (
                                         <p className="empty-state">
-                                            Score: {submission.score}
+                                            Score: {submission.score} / 10
                                             {submission.time_complexity ? ` — ${submission.time_complexity}` : ''}
                                             {submission.feedback ? ` — ${submission.feedback}` : ''}
                                         </p>
                                     ) : (
                                         <div className="profile-field-grid">
                                             <div className="input-group">
-                                                <label>Score</label>
+                                                <label>Score (0-10)</label>
                                                 <input
                                                     type="number"
                                                     min="0"
+                                                    max="10"
                                                     value={reviewDrafts[submission.id]?.score ?? ''}
                                                     onChange={(e) => handleReviewChange(submission.id, 'score', e.target.value)}
                                                 />
@@ -291,7 +356,7 @@ const CompetitionDetail = () => {
                 </div>
             )}
 
-            <div className="bounty-detail-section panel">
+            <div id="leaderboard" className="bounty-detail-section panel">
                 <h3>Leaderboard</h3>
                 {leaderboard.length > 0 ? (
                     <table className="leaderboard-table">

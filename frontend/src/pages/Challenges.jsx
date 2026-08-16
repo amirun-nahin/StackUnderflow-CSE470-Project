@@ -14,25 +14,30 @@ const Challenges = () => {
 
     return (
         <div className="page-container">
-            <h1 className="discover-heading">Code Competition Hub</h1>
+            <div className="form-container form-container--wide">
+                <div className="hub-header" style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+                    <h2 className="discover-heading">Code Competition Hub</h2>
+                </div>
 
-            <div className="challenges-tabs">
-                {TABS.map(tab => (
-                    <button
-                        key={tab.key}
-                        type="button"
-                        className={`challenges-tab-btn ${activeTab === tab.key ? 'challenges-tab-btn--active' : ''}`}
-                        onClick={() => setActiveTab(tab.key)}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
+                {/* Tab Switcher using btn styling */}
+                <div className="news-tabs challenges-tabs">
+                    {TABS.map(tab => (
+                        <button
+                            key={tab.key}
+                            type="button"
+                            className={`btn ${activeTab === tab.key ? 'btn-primary' : 'btn-secondary'} challenges-tab-btn ${activeTab === tab.key ? 'challenges-tab-btn--active' : ''}`}
+                            onClick={() => setActiveTab(tab.key)}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
 
-            <div className="panel challenges-tab-content">
-                {activeTab === 'bounty' && <BountyBoard />}
-                {activeTab === 'duel' && <DuelBoard />}
-                {activeTab === 'competition' && <CompetitionBoard />}
+                <div className="panel challenges-tab-content" style={{ marginTop: '1.5rem' }}>
+                    {activeTab === 'bounty' && <BountyBoard />}
+                    {activeTab === 'duel' && <DuelBoard />}
+                    {activeTab === 'competition' && <CompetitionBoard />}
+                </div>
             </div>
         </div>
     );

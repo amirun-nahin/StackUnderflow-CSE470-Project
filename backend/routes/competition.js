@@ -272,5 +272,22 @@ router.get('/:competitionId/leaderboard', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch leaderboard' });
     }
 });
-
+// ---------------------------------------------------------------
+// Let a participant check their own submission's score/feedback
+// ---------------------------------------------------------------
+router.get('/:competitionId/my-submission', validateToken, async (req, res) => {
+    try {
+        const { competitionId } = req.params;
+        const submission = await CompetitionSubmission.findOne({
+            where: { UserId: req.user.id, CompetitionId: competitionId }
+        });
+        if (!submission) {
+            return res.status(404).json({ error: 'You have not submitted to this competition' });
+        }
+        res.json(submission);
+    } catch (error) {
+        console.error('Error fetching my submission:', error);
+        res.status(500).json({ error: 'Failed to fetch your submission' });
+    }
+});
 module.exports = router;

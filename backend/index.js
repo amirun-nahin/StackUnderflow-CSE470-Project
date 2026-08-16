@@ -14,7 +14,7 @@ const Group = require('./models/Group');
 const GroupMember = require('./models/GroupMember');
 const Message = require('./models/Message');
 const SavedNews = require('./models/SavedNews');
-const QuestionBank = require('./models/QuestionBank');
+//const QuestionBank = require('./models/QuestionBank');
 const Duel = require('./models/Duel');
 const DuelQuestion = require('./models/DuelQuestion');
 const DuelSubmission = require('./models/DuelSubmission');
@@ -153,8 +153,8 @@ Duel.belongsTo(User, { as: 'Winner', foreignKey: 'WinnerId' });
 
 Duel.hasMany(DuelQuestion);
 DuelQuestion.belongsTo(Duel);
-QuestionBank.hasMany(DuelQuestion);
-DuelQuestion.belongsTo(QuestionBank);
+// QuestionBank.hasMany(DuelQuestion);
+// DuelQuestion.belongsTo(QuestionBank);
 
 User.hasMany(DuelSubmission);
 DuelSubmission.belongsTo(User);
@@ -175,7 +175,7 @@ User.hasMany(QuizAttempt);
 QuizAttempt.belongsTo(User);
 
 // Database Sync and Server Start
-sequelize.sync().then(() => {
+sequelize.sync().then(() => { //sequelize.sync({ alter: true }).then(() => {
     console.log('Database connected successfully!');
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
