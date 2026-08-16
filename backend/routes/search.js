@@ -5,6 +5,9 @@ const sequelize = require('../config/db');
 const Post = require('../models/Post');
 const User = require('../models/User');
 const Competition = require('../models/Competition');
+const Group = require('../models/Group');
+const GroupMember = require('../models/GroupMember');
+const Message = require('../models/Message');
 const { validateToken } = require('../middlewares/AuthMiddleware');
 
 const RESULT_LIMIT = 20;
@@ -85,6 +88,85 @@ router.get('/', validateToken, async (req, res) => {
                 }))
             });
         }
+        // -------------------- Groups --------------------
+        if (type === 'group') {
+            const groups = await Group.findAll({
+                where: query ? {
+                    [Op.or]: [
+                        { name: { [Op.like]: `%${query}%` } },
+                        { description: { [Op.like]: `%${query}%` } }
+                    ]
+                } : {},
+                order: [['name', 'ASC']],
+                limit: RESULT_LIMIT
+            });
+
+            return res.json({
+                results: groups.map(g => ({
+                    type: 'group',
+                    id: g.id,
+                    name: g.name,
+                    description: g.description,
+                    is_private: g.is_private
+                }))
+            });
+        }
+
+        // -------------------- Messages (your own conversations only) --------------------
+        if (type === 'message') {
+            const myId = req.user.id;
+            const andParts = [{ [Op.or]: [{ SenderId: myId }, { ReceiverId: myId }] }];
+
+            if (query) {
+                const orConditions = [
+                    { text_content: { [Op.like]: `%${query}%` } },
+                    { '$Sender.username$': { [Op.like]: `%${query}%` } },
+                    { '$Receiver.username$': { [Op.like]: `%${query}%` } }
+                ];
+                if (asDate) {
+                    orConditions.push(sequelize.where(sequelize.fn('DATE', sequelize.col('Message.createdAt')), asDate));
+                }
+                andParts.push({ [Op.or]: orConditions });
+            }
+
+            const messages = await Message.findAll({
+                subQuery: false,
+                where: { [Op.and]: andParts },
+                include: [
+                    { model: User, as: 'Sender', attributes: ['id', 'username'] },
+                    { model: User, as: 'Receiver', attributes: ['id', 'username'] }
+                ],
+                order: [['createdAt', 'DESC']],
+                limit: RESULT_LIMIT
+            });
+
+            return res.json({
+                results: messages.map(m => {
+                    const otherUser = m.SenderId === myId ? m.Receiver : m.Sender;
+                    return {
+                        type: 'message',
+                        id: m.id,
+                        text_content: m.text_content,
+                        createdAt: m.createdAt,
+                        otherUserId: otherUser?.id,
+                        otherUsername: otherUser?.username
+                    };
+                })
+            });
+        }
+
+        // -------------------- Posts (default) --------------------
+        // Visible posts are: ungrouped posts, posts in public groups, and posts
+        // in private groups this user is an approved member of.
+        const [publicGroups, myMemberships] = await Promise.all([
+            Group.findAll({ where: { is_private: false }, attributes: ['id'] }),
+            GroupMember.findAll({ where: { UserId: req.user.id, status: 'APPROVED' }, attributes: ['GroupId'] })
+        ]);
+        const visibleGroupIds = [
+            ...publicGroups.map(g => g.id),
+            ...myMemberships.map(m => m.GroupId)
+        ];
+
 
         // -------------------- Posts (default) --------------------
         const andParts = [];
@@ -110,7 +192,10 @@ router.get('/', validateToken, async (req, res) => {
         const posts = await Post.findAll({
             subQuery: false,
             where: {
-                GroupId: null,
+                [Op.or]: [
+                    { GroupId: null },
+                    { GroupId: { [Op.in]: visibleGroupIds } }
+                ],
                 ...(andParts.length ? { [Op.and]: andParts } : {})
             },
             include: [{ model: User, attributes: ['id', 'username', 'profile_picture'] }],

@@ -40,7 +40,6 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("username");
-    localStorage.removeItem("recentSearches");
     window.location.href = "/login";
   };
 
