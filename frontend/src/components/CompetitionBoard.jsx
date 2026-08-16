@@ -17,7 +17,6 @@ const CompetitionBoard = () => {
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
 
-
     const fetchBoard = async () => {
         try {
             const response = await fetch('http://localhost:3001/api/competition/board');
@@ -41,45 +40,56 @@ const CompetitionBoard = () => {
     }, []);
 
     return (
-        <div className="competition-board">
-            
-                    <Link to="/host-competition" className="btn btn-outline btn-sm competition-board__host-btn">
-                        + Host a Competition
+        <div>
+            <div className="hub-header" style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+                <Link to="/host-competition" className="btn btn-outline btn-sm competition-board__host-btn">
+                    + Host a Competition
+                </Link>
+            </div>
+
+            {errorMessage && <p className="error-text">{errorMessage}</p>}
+            {loading && <p className="empty-state">Loading competitions...</p>}
+
+            {!loading && competitions.length === 0 && !errorMessage && (
+                <p className="empty-state">No competitions yet.</p>
+            )}
+
+            <div className="posts-container">
+                {competitions.map(competition => (
+                    <Link
+                        key={competition.id}
+                        to={`/competition/${competition.id}`}
+                        className="panel post-card post-card--review post-card--clickable"
+                    >
+                        <div className="post-header">
+                            <div className="post-header__identity">
+                                <div className="avatar-circle avatar-circle--sm">🧑‍💻</div>
+                                <span className="post-author">{competition.User?.username}</span>
+                            </div>
+                            <div className="post-header__badges">
+                                <span className="lang-chip">{competition.language}</span>
+                                <span className={`category-chip category-chip--${competition.phase.toLowerCase()}`}>
+                                    {competition.phase}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="post-body">
+                            <p className="post-text">{competition.title}</p>
+                            <p className="discover-card__meta">{getPhaseLabel(competition)}</p>
+                        </div>
+
+                        <div className="post-footer card-actions-row">
+                            <span className="discover-card__meta">
+                                {competition.participant_count || 0} participants
+                            </span>
+                        </div>
                     </Link>
-
-                    {errorMessage && <p className="error-text">{errorMessage}</p>}
-                    {loading && <p className="empty-state">Loading competitions...</p>}
-
-                    {!loading && competitions.length === 0 && !errorMessage && (
-                        <p className="empty-state">No competitions yet.</p>
-                    )}
-
-                    <div className="competition-board__list">
-                        {competitions.map(competition => (
-                            <Link
-                                key={competition.id}
-                                to={`/competition/${competition.id}`}
-                                className="competition-card"
-                            >
-                                <div className="competition-card__title-row">
-                                    <span className="competition-card__title">{competition.title}</span>
-                                    <span className={`competition-phase-chip competition-phase-chip--${competition.phase.toLowerCase()}`}>
-                                        {competition.phase}
-                                    </span>
-                                </div>
-                                <p className="competition-card__meta">
-                                    Hosted by {competition.User?.username} • {competition.language}
-                                </p>
-                                <p className="competition-card__status">{getPhaseLabel(competition)}</p>
-                                <p className="competition-card__participants">
-                                    {competition.participant_count || 0} participants
-                                </p>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-
+                ))}
+            </div>
+        </div>
     );
 };
 
 export default CompetitionBoard;
+

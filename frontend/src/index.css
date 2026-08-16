@@ -863,6 +863,13 @@ textarea {
   gap: var(--space-3);
   margin: var(--space-4) 0 var(--space-6);
 }
+.comment-form-row--stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+.comment-form-row--stacked button {
+  align-self: flex-start;
+}
 .comment-form-row input {
   flex: 1;
   padding: 0.65rem 0.85rem;
@@ -979,6 +986,11 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.avatar-circle--xs {
+  width: 22px;
+  height: 22px;
+  font-size: 0.7rem;
 }
 .avatar-circle--sm {
   width: 32px;
@@ -2136,3 +2148,307 @@ textarea {
 .repo-member-row:last-child {
   border-bottom: none;
 }
+/* -------------------------------------------------------------------------
+   19. Code Competition Hub (Bounty / Duel / Competition)
+   Mostly reuses existing post-card, category-chip, discover-card, and
+   chat-dropdown patterns already defined above — only true additions live
+   here.
+   ------------------------------------------------------------------------- */
+
+/* Hub tab switcher — reuses .news-tabs / .news-tab-btn, just adds spacing */
+.challenges-tabs {
+  margin: var(--space-5) 0;
+}
+
+/* A .post-card that's also a <Link> (competition/duel cards) needs block
+   layout since anchors are inline by default. */
+a.post-card {
+  display: block;
+  text-decoration: none;
+}
+
+/* Generic spaced row for card footers/actions — pairs with .post-footer */
+.card-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* Status/phase chips — reuse the .category-chip base, new color modifiers
+   only (all colors reused from existing tokens). */
+.category-chip--upcoming {
+  background-color: var(--color-cat-collab-tint);
+  color: var(--color-cat-collab);
+}
+.category-chip--active {
+  background-color: var(--color-up-tint);
+  color: var(--color-up);
+}
+.category-chip--closed {
+  background-color: var(--color-cat-normal-tint);
+  color: var(--color-cat-normal);
+}
+.category-chip--pending {
+  background-color: var(--color-cat-collab-tint);
+  color: var(--color-cat-collab);
+}
+.category-chip--completed {
+  background-color: var(--color-cat-normal-tint);
+  color: var(--color-cat-normal);
+}
+.category-chip--declined {
+  background-color: var(--color-down-tint);
+  color: var(--color-down);
+}
+
+/* Bounty card title link (the one piece with no existing analog, since
+   feed posts aren't individually-linked titles) */
+.bounty-card__title {
+  display: block;
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: var(--space-2);
+}
+.bounty-card__title:hover {
+  color: var(--color-accent-strong);
+  text-decoration: none;
+}
+
+.bounty-card__avatars {
+  display: flex;
+}
+.bounty-card__avatars .avatar-circle--xs {
+  margin-left: -8px;
+  border: 2px solid var(--color-surface);
+}
+.bounty-card__avatars .avatar-circle--xs:first-child {
+  margin-left: 0;
+}
+
+.competition-board__host-btn {
+  margin-bottom: var(--space-4);
+  text-decoration: none;
+}
+
+/* Duel challenge form — compact inline row, no existing analog */
+.duel-invite-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+.duel-invite-form input[type="text"] {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-ink);
+}
+
+.duel-board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* Leaderboard table — no existing table pattern in the app to reuse */
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.leaderboard-table th,
+.leaderboard-table td {
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+.leaderboard-table th {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-muted);
+}
+.leaderboard-table tbody tr:hover {
+  background-color: var(--color-surface-sunken);
+}
+.leaderboard-table tbody tr:first-child td {
+  font-weight: 700;
+  color: var(--color-accent-strong);
+}
+
+/* Shared boxed sections on Bounty / Competition / Duel detail pages —
+   just spacing on top of .panel, which does all the real styling */
+.bounty-detail-section {
+  margin-bottom: var(--space-5);
+}
+.bounty-detail-section:last-child {
+  margin-bottom: 0;
+}
+.bounty-detail-section h3 {
+  font-size: var(--text-md);
+  margin-bottom: var(--space-3);
+}
+
+.bounty-detail__enrollees {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.bounty-detail__submissions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.bounty-submission {
+  background-color: var(--color-surface-sunken);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Notification bell trigger/badge — genuinely new (no existing navbar
+   icon-button pattern); the dropdown's contents reuse .chat-dropdown-title,
+   .chat-user-item, and .chat-empty-text directly. */
+.notification-bell {
+  position: relative;
+}
+.notification-bell__trigger {
+  position: relative;
+  background: none;
+  border: none;
+  font-size: var(--text-lg);
+  padding: var(--space-2);
+  border-radius: var(--radius-full);
+  line-height: 1;
+}
+.notification-bell__trigger:hover {
+  background-color: var(--color-surface-sunken);
+}
+.notification-bell__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-down);
+  color: var(--color-on-accent);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-surface);
+}
+.notification-bell__dropdown {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-2);
+  z-index: 200;
+}
+/* Container Spacing */
+.competition-detail-header.panel {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Controls vertical spacing between lines */
+}
+
+/* Title & Badge Alignment */
+.competition-detail-header__title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.competition-detail-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+/* Reset Paragraph Default Margins & Set Line Height */
+.competition-detail__meta,
+.competition-detail__description {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.competition-detail__meta {
+    font-size: 0.95rem;
+    color: #64748b;
+}
+
+.competition-detail__description {
+    font-size: 1rem;
+    color: #334155;
+    padding-top: 4px;
+}
+
+/* Consolidated Footer Metadata Row */
+.competition-detail__footer-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding-top: 6px;
+    font-size: 0.875rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.competition-detail__footer-info .dot {
+    color: #94a3b8;
+}
+.duel-status-row {
+  margin-bottom: var(--space-3);
+}
+
+.duel-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+}
+
+.duel-option-btn--correct {
+  background-color: var(--color-up-tint);
+  border-color: var(--color-up);
+  color: var(--color-up);
+}
+
+.duel-option-btn--incorrect {
+  background-color: var(--color-down-tint);
+  border-color: var(--color-down);
+  color: var(--color-down);
+}
+@media (max-width: 480px) {
+  .notification-bell__dropdown {
+    width: 280px;
+    right: -60px;
+  }
+}
+

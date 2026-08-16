@@ -85,52 +85,74 @@ const BountyBoard = () => {
                 <p className="empty-state">No open bounties right now.</p>
             )}
 
-            <div className="bounty-board__list">
+            <div className="posts-container" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {bounties.map(bounty => {
                     const isOwner = myUserId === bounty.User?.id;
                     const isEnrolled = bounty.enrolled_users?.some(u => u.id === myUserId);
 
                     return (
-                        <div key={bounty.id} className="bounty-card">
-                            <Link to={`/bounty/${bounty.id}`} className="bounty-card__title">
-                                {bounty.text_content}
-                            </Link>
-
-                            <div className="bounty-card__meta">
-                                {typeof bounty.bounty_reward_points === 'number' && (
-                                    <span className="bounty-meta-chip bounty-meta-chip--reward">
-                                        🏆 {bounty.bounty_reward_points} pts
+                        <div key={bounty.id} className="post-card panel post-card--bounty post-card--clickable">
+                            {/* Card Header: User Identity & Badge */}
+                            <div className="post-header">
+                                <div className="post-header__identity">
+                                    <div className="avatar-circle avatar-circle--xs">🧑‍💻</div>
+                                    <span className="username" style={{ fontWeight: 600 }}>
+                                        {bounty.User?.username || 'Bounty Host'}
                                     </span>
-                                )}
-                                {bounty.bounty_deadline && (
-                                    <span className="bounty-meta-chip">
-                                        ⏳ Due {new Date(bounty.bounty_deadline).toLocaleDateString()}
-                                    </span>
-                                )}
-                            </div>
-
-                            <div className="bounty-card__enrolled">
-                                <div className="bounty-card__avatars">
-                                    {(bounty.enrolled_users || []).slice(0, 4).map((user, idx) => (
-                                        <div key={user.id ?? idx} className="avatar-circle avatar-circle--xs" title={user.username}>
-                                            🧑‍💻
-                                        </div>
-                                    ))}
                                 </div>
-                                <span className="bounty-card__enrolled-count">
-                                    {bounty.enrolled_count || 0} enrolled
-                                </span>
+                                <div className="post-header__badges">
+                                    <span className="badge">BOUNTY</span>
+                                </div>
                             </div>
 
-                            {!isOwner && (
-                                <button
-                                    className={`btn btn-sm ${isEnrolled ? 'btn-outline' : 'btn-primary'}`}
-                                    disabled={isEnrolled || enrollingId === bounty.id || !token}
-                                    onClick={() => handleEnroll(bounty.id)}
-                                >
-                                    {isEnrolled ? 'Enrolled' : enrollingId === bounty.id ? 'Enrolling...' : 'Enroll'}
-                                </button>
-                            )}
+                            {/* Card Body: Content & Meta Info */}
+                            <div className="post-body post-body--clickable">
+                                <Link to={`/bounty/${bounty.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                    <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', color: 'var(--text-color, inherit)' }}>
+                                        {bounty.text_content}
+                                    </h3>
+                                </Link>
+
+                                <div className="bounty-card__meta" style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                                    {typeof bounty.bounty_reward_points === 'number' && (
+                                        <span className="bounty-meta-chip bounty-meta-chip--reward">
+                                            🏆 {bounty.bounty_reward_points} pts
+                                        </span>
+                                    )}
+                                    {bounty.bounty_deadline && (
+                                        <span className="bounty-meta-chip">
+                                            ⏳ Due {new Date(bounty.bounty_deadline).toLocaleDateString()}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Card Footer: Enrolled Users & Action Button */}
+                            <div className="post-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div className="bounty-card__enrolled" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <div className="bounty-card__avatars">
+                                        {(bounty.enrolled_users || []).slice(0, 4).map((user, idx) => (
+                                            <div key={user.id ?? idx} className="avatar-circle avatar-circle--xs" title={user.username}>
+                                                🧑‍💻
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <span className="bounty-card__enrolled-count">
+                                        {bounty.enrolled_count || 0} enrolled
+                                    </span>
+                                </div>
+
+                                {!isOwner && (
+                                    <button
+                                        type="button"
+                                        className={`btn btn-sm ${isEnrolled ? 'btn-outline' : 'btn-primary'}`}
+                                        disabled={isEnrolled || enrollingId === bounty.id || !token}
+                                        onClick={() => handleEnroll(bounty.id)}
+                                    >
+                                        {isEnrolled ? 'Enrolled' : enrollingId === bounty.id ? 'Enrolling...' : 'Enroll'}
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     );
                 })}

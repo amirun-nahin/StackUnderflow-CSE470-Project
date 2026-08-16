@@ -67,7 +67,7 @@ const NotificationBell = () => {
                 className="notification-bell__trigger"
                 onClick={() => setOpen(!open)}
             >
-                🔔
+                🕭
                 {unreadCount > 0 && (
                     <span className="notification-bell__badge">{unreadCount}</span>
                 )}
@@ -75,24 +75,22 @@ const NotificationBell = () => {
 
             {open && (
                 <div className="notification-bell__dropdown">
-                    <p className="notification-bell__title">Notifications</p>
+                    <p className="chat-dropdown-title">Notifications</p>
                     {notifications.length > 0 ? (
-                        <div className="notification-bell__list">
-                            {notifications.map(notification => (
-                                <div
-                                    key={notification.id}
-                                    className={`notification-bell__item ${!notification.is_read ? 'notification-bell__item--unread' : ''}`}
-                                    onClick={() => handleNotificationClick(notification)}
-                                >
-                                    <p className="notification-bell__message">{notification.message}</p>
-                                    <span className="notification-bell__time">
-                                        {new Date(notification.createdAt).toLocaleString()}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
+                        notifications.map(notification => (
+                            <div
+                                key={notification.id}
+                                className={`chat-user-item ${!notification.is_read ? 'chat-user-item--active' : ''}`}
+                                onClick={() => handleNotificationClick(notification)}
+                            >
+                                <p>{notification.message}</p>
+                                <span className="discover-card__meta">
+                                    {new Date(notification.createdAt).toLocaleString()}
+                                </span>
+                            </div>
+                        ))
                     ) : (
-                        <p className="empty-state">No notifications yet.</p>
+                        <p className="chat-empty-text">No notifications yet.</p>
                     )}
                 </div>
             )}
