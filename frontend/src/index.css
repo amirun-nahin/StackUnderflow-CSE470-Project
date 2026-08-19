@@ -2560,3 +2560,31 @@ a.post-card {
   color: var(--color-ink-muted);
   margin-top: 0.15rem;
 }
+.profile-awards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.profile-awards__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.profile-awards__medals {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.profile-award-medal {
+  font-size: var(--text-2xl);
+  line-height: 1;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+.profile-award-medal:hover {
+  transform: scale(1.15);
+}

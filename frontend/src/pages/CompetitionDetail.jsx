@@ -15,6 +15,7 @@ const CompetitionDetail = () => {
 
     const [submissionCode, setSubmissionCode] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [reviewDrafts, setReviewDrafts] = useState({});
     const token = localStorage.getItem('accessToken');
     let myUserId = null;
     if (token && token !== 'undefined' && token !== 'null' && token.includes('.')) {
@@ -73,7 +74,8 @@ const CompetitionDetail = () => {
         await fetchLeaderboard();
 
         if (data) {
-            const amHost = myUserId === data.User?.id;
+            const dataHostId = data.User?.id ?? data.UserId ?? data.user_id ?? data.host_id;
+            const amHost = Boolean(dataHostId && myUserId && String(myUserId) === String(dataHostId));
 
             // Host-only review list — only fetchable (and shown) once the
             // submission window has closed; asking earlier is a 403.
@@ -215,9 +217,9 @@ const CompetitionDetail = () => {
                     <span className={`category-chip category-chip--${competition.phase.toLowerCase()}`}>
                         {competition.phase}
                     </span>
-                    <span className="category-chip category-chip--normal">
-                        {competition.participant_count || 0} participants
-                    </span>
+                    {/* <span className="category-chip category-chip--normal">
+                        {competition.participant_count ?? competition.participants_count ?? competition.Participants?.length ?? 0} participants
+                    </span> */}
                 </div>
                 <p className="discover-card__meta">
                     Hosted by {competition.User?.username} • Starts {new Date(competition.start_time).toLocaleString()} • {competition.duration_minutes} min

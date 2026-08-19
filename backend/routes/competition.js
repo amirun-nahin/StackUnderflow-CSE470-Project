@@ -206,9 +206,9 @@ router.put('/submission/:submissionId/evaluate', validateToken, async (req, res)
         }
 
         const parsedScore = Number(score);
-        if (!Number.isFinite(parsedScore) || parsedScore < 0) {
-            return res.status(400).json({ error: 'score must be a non-negative number' });
-        }        
+        if (!Number.isFinite(parsedScore) || parsedScore < 0 || parsedScore > 10) {
+            return res.status(400).json({ error: 'score must be a number between 0 and 10' });
+        }
         const submission = await CompetitionSubmission.findByPk(submissionId, {
             include: [{ model: Competition }]
         });
@@ -219,7 +219,7 @@ router.put('/submission/:submissionId/evaluate', validateToken, async (req, res)
         if (submission.Competition.UserId !== req.user.id) {
             return res.status(403).json({ error: 'Only the host can evaluate this submission' });
         }
-        
+
         const phase = getPhase(submission.Competition);
         if (phase === 'ACTIVE') {
             return res.status(403).json({ error: 'Cannot evaluate submissions while the competition is still active' });
@@ -229,8 +229,6 @@ router.put('/submission/:submissionId/evaluate', validateToken, async (req, res)
         }
 
         submission.score = parsedScore;
-
-        submission.score = score;
         submission.time_complexity = time_complexity || null;
         submission.feedback = feedback || null;
         submission.status = 'EVALUATED';
