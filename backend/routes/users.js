@@ -6,6 +6,7 @@ const Post = require('../models/Post');
 const RepoRequestJoin = require('../models/RepoRequestJoin');
 const BountyEnrollment = require('../models/BountyEnrollment');
 const BountySubmission = require('../models/BountySubmission');
+const Duel = require('../models/Duel');
 const Competition = require('../models/Competition');
 const Vote = require('../models/Vote');
 const Comment = require('../models/Comment');
@@ -66,7 +67,47 @@ router.get('/:username', validateToken, async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' })
         };
-        res.json(user);
+        const duel_wins_count = await Duel.count({
+            where: { WinnerId: user.id, status: 'COMPLETED' }
+        });
+
+        // Only competitions this user actually submitted to are candidates
+        const mySubmissions = await CompetitionSubmission.findAll({
+            where: { UserId: user.id },
+            include: [{ model: Competition, attributes: ['id', 'title'] }]
+        });
+
+        const competitionAwards = [];
+        for (const mySub of mySubmissions) {
+            const allSubs = await CompetitionSubmission.findAll({
+                where: { CompetitionId: mySub.CompetitionId }
+            });
+            if (allSubs.length === 0) continue;
+
+            // Only award once every submission for this competition is EVALUATED
+            const stillPending = allSubs.some(s => s.status !== 'EVALUATED');
+            if (stillPending) continue;
+
+            const ranked = [...allSubs].sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return new Date(a.first_submitted_at) - new Date(b.first_submitted_at);
+            });
+            const myRank = ranked.findIndex(s => s.UserId === user.id) + 1;
+
+            if (myRank >= 1 && myRank <= 3) {
+                competitionAwards.push({
+                    rank: myRank,
+                    Competition: { id: mySub.Competition.id, title: mySub.Competition.title }
+                });
+            }
+        }
+
+        const json = user.toJSON();
+        json.CompetitionAwards = competitionAwards;
+        json.duel_wins_count = duel_wins_count;
+
+        return res.json(json);
+        //res.json(user);
     } catch (error) {
         console.error("Error fetching profile:", error);
         res.status(500).json({ error: 'Failed to fetch profile' });

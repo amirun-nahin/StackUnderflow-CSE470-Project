@@ -16,7 +16,11 @@ const parseTechStack = (tech) => {
     }
     return [];
 };
-
+const AWARD_RANKS = {
+    1: { ordinal: '1st', medal: '🥇' },
+    2: { ordinal: '2nd', medal: '🥈' },
+    3: { ordinal: '3rd', medal: '🥉' }
+};
 const Profile = () => {
     const { username } = useParams();
     const navigate = useNavigate();
@@ -147,6 +151,13 @@ const Profile = () => {
     if (loading) return <div className="loading-state">Loading...</div>;
     if (!profile) return null;
 
+    const awardsByRank = (profile.CompetitionAwards || []).reduce((acc, award) => {   // ADD
+        if (!acc[award.rank]) acc[award.rank] = [];                                    // ADD
+        acc[award.rank].push(award);                                                   // ADD
+        return acc;                                                                    // ADD
+    }, {});                                                                             // ADD
+    const hasAnyAwards = Object.keys(awardsByRank).length > 0;
+     
     // Same status -> presentation mapping as before, just returning a short
     // key used to pick a CSS modifier class instead of a raw color.
     const getStatusKey = (status) => {
@@ -229,6 +240,45 @@ const Profile = () => {
                             <h3 className="profile-field__label">Bio</h3>
                             <p className="profile-field__value">{profile.bio || "This user hasn't written a bio yet."}</p>
                         </div>
+                        {(hasAnyAwards || profile.duel_wins_count > 0) && (
+                            <div className="profile-awards">
+                                {[1, 2, 3].map(rank => {
+                                    const awards = awardsByRank[rank];
+                                    if (!awards || awards.length === 0) return null;
+                                    const { ordinal, medal } = AWARD_RANKS[rank];
+                                    return (
+                                        <div key={rank} className="profile-awards__row">
+                                            <span className="profile-field__label">
+                                                {ordinal} in Coding Competition:
+                                            </span>
+                                            <span className="profile-awards__medals">
+                                                {awards.map((award, idx) => (
+                                                    <Link
+                                                        key={`${award.Competition?.id}-${idx}`}
+                                                        to={`/competition/${award.Competition?.id}`}
+                                                        className="profile-award-medal"
+                                                        title={award.Competition?.title}
+                                                    >
+                                                        {medal}
+                                                    </Link>
+                                                ))}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+
+                                {profile.duel_wins_count > 0 && (
+                                    <div className="profile-awards__row">
+                                        <span className="profile-field__label">
+                                            1v1 Duel Wins:
+                                        </span>
+                                        <span className="category-chip category-chip--active">
+                                            🏅 {profile.duel_wins_count}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         <div className="profile-field-grid">
                             <div>
