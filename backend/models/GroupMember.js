@@ -4,7 +4,7 @@ const sequelize = require('../config/db');
 // Pivot table to track membership, roles, and approval status
 const GroupMember = sequelize.define('GroupMember', {
     role: {
-        type: DataTypes.ENUM('ADMIN', 'MEMBER'),
+        type: DataTypes.ENUM('ADMIN', 'TEAM_MANAGER', 'SCRUM_MASTER', 'PRODUCT_OWNER', 'DEVELOPER', 'MEMBER'),
         defaultValue: 'MEMBER',
         allowNull: false
     },

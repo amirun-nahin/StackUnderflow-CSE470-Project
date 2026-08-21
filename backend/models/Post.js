@@ -44,6 +44,15 @@ const Post = sequelize.define('Post', {
     people_needed: {
         type: DataTypes.INTEGER,
         allowNull: true,
+    },
+    RepoGroupId: {
+        // Set when this is a REPO_REQUEST post: the id of the private
+        // collaboration Group that was auto-created for it. Deliberately a
+        // separate column from GroupId (which controls feed visibility) —
+        // this post still belongs to the global feed, it just also spawned
+        // a group.
+        type: DataTypes.INTEGER,
+        allowNull: true,
     }
 });
 

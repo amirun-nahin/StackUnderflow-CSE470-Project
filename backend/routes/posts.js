@@ -26,7 +26,8 @@ router.get('/feed', async (req, res) => {
                 { model: User, attributes: ['id', 'username', 'profile_picture'] },
                 { model: Vote },
                 { model: Comment, include: [{ model: User, attributes: ['username'] }] },
-                { model: RepoRequestJoin, include: [{ model: User, attributes: ['id', 'username', 'profile_picture'] }] }
+                { model: RepoRequestJoin, include: [{ model: User, attributes: ['id', 'username', 'profile_picture'] }] },
+                { model: Group, as: 'RepoGroup', attributes: ['id', 'name'] }
             ]
         });
         res.json(posts);
@@ -93,7 +94,8 @@ router.get('/:postId', validateToken, async (req, res) => {
                     include: [{ model: User, attributes: ['username'] }],
                     order: [['createdAt', 'ASC']]
                 },
-                { model: RepoRequestJoin, include: [{ model: User, attributes: ['id', 'username', 'profile_picture'] }] }
+                { model: RepoRequestJoin, include: [{ model: User, attributes: ['id', 'username', 'profile_picture'] }] },
+                { model: Group, as: 'RepoGroup', attributes: ['id', 'name'] }
             ]
         });
 
@@ -143,9 +145,40 @@ router.post('/create', validateToken, async (req, res) => {
             people_needed: category === 'REPO_REQUEST' ? Number(people_needed) : null,
             UserId: req.user.id
         });
+        // Scheduled Collaboration: a Repository Request automatically spawns
+        // a private group (named after the repo) with the poster as ADMIN.
+        // Joiners are added to this group in repoRequest.js's /join route.
+        if (category === 'REPO_REQUEST') {
+            let groupName = repo_name.trim();
+            let suffix = 2;
+            while (await Group.findOne({ where: { name: groupName } })) {
+                groupName = `${repo_name.trim()} (${suffix})`;
+                suffix++;
+            }
+
+            const group = await Group.create({
+                name: groupName,
+                description: 'repository',
+                is_private: true
+            });
+
+            await GroupMember.create({
+                UserId: req.user.id,
+                GroupId: group.id,
+                role: 'ADMIN',
+                status: 'APPROVED'
+            });
+
+            newPost.RepoGroupId = group.id;
+            await newPost.save();
+        }
+
 
         const postWithUser = await Post.findByPk(newPost.id, {
-            include: [{ model: User, attributes: ['username', 'profile_picture'] }]
+            include: [
+                { model: User, attributes: ['username', 'profile_picture'] },
+                { model: Group, as: 'RepoGroup', attributes: ['id', 'name'] }
+            ]
         });
 
         res.status(201).json(postWithUser);
