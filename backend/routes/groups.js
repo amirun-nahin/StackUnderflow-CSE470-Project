@@ -209,6 +209,73 @@ router.put(
   },
 );
 
+// Role hierarchy, top (most authority) to bottom
+const ROLE_HIERARCHY = ["ADMIN", "TEAM_MANAGER", "SCRUM_MASTER", "PRODUCT_OWNER", "DEVELOPER", "MEMBER"];
+
+// Get a group's approved members with their roles, sorted by role hierarchy
+router.get("/:groupId/members", validateToken, async (req, res) => {
+  try {
+    const requester = await GroupMember.findOne({
+      where: { GroupId: req.params.groupId, UserId: req.user.id, status: "APPROVED" },
+    });
+    if (!requester) {
+      return res.status(403).json({ error: "You must be a group member to view members" });
+    }
+
+    const group = await Group.findByPk(req.params.groupId, {
+      include: [
+        {
+          model: User,
+          attributes: ["id", "username", "profile_picture"],
+          through: { where: { status: "APPROVED" }, attributes: ["role"] },
+        },
+      ],
+    });
+    if (!group) return res.status(404).json({ error: "Group not found" });
+
+    const members = group.Users
+      .map((u) => ({ id: u.id, username: u.username, profile_picture: u.profile_picture, role: u.GroupMember.role }))
+      .sort((a, b) => ROLE_HIERARCHY.indexOf(a.role) - ROLE_HIERARCHY.indexOf(b.role));
+
+    res.json(members);
+  } catch (error) {
+    console.error("Fetch members error:", error);
+    res.status(500).json({ error: "Failed to fetch members" });
+  }
+});
+
+// Admin: Assign a role to a member
+router.put("/:groupId/members/:userId/role", validateToken, async (req, res) => {
+  try {
+    const { role } = req.body;
+    if (!ROLE_HIERARCHY.includes(role)) {
+      return res.status(400).json({ error: "Invalid role" });
+    }
+
+    const isAdmin = await GroupMember.findOne({
+      where: { GroupId: req.params.groupId, UserId: req.user.id, role: "ADMIN" },
+    });
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Only the admin can assign roles" });
+    }
+
+    const membership = await GroupMember.findOne({
+      where: { GroupId: req.params.groupId, UserId: req.params.userId, status: "APPROVED" },
+    });
+    if (!membership) {
+      return res.status(404).json({ error: "Member not found in this group" });
+    }
+
+    membership.role = role;
+    await membership.save();
+
+    res.json({ message: "Role updated", role: membership.role });
+  } catch (error) {
+    console.error("Assign role error:", error);
+    res.status(500).json({ error: "Failed to assign role" });
+  }
+});
+
 // Create a Group Post (approved members, standard post only)
 router.post("/:groupId/posts", validateToken, async (req, res) => {
   try {
@@ -325,6 +392,40 @@ router.delete("/:groupId/leave", validateToken, async (req, res) => {
     } catch (error) {
         console.error("Leave group error:", error);
         res.status(500).json({ error: "Failed to leave group" });
+    }
+});
+
+// Admin: Edit group name/description
+router.put("/:groupId", validateToken, async (req, res) => {
+    try {
+        const { name, description } = req.body;
+
+        const isAdmin = await GroupMember.findOne({
+            where: { GroupId: req.params.groupId, UserId: req.user.id, role: "ADMIN" }
+        });
+        if (!isAdmin) return res.status(403).json({ error: "Only the admin can edit this group" });
+
+        const group = await Group.findByPk(req.params.groupId);
+        if (!group) return res.status(404).json({ error: "Group not found" });
+
+        if (name !== undefined) {
+            if (!name.trim()) {
+                return res.status(400).json({ error: "Group name cannot be empty" });
+            }
+            group.name = name.trim();
+        }
+        if (description !== undefined) {
+            group.description = description.trim();
+        }
+
+        await group.save();
+        res.json({ message: "Group updated", name: group.name, description: group.description });
+    } catch (error) {
+        if (error.name === "SequelizeUniqueConstraintError") {
+            return res.status(400).json({ error: "A group with that name already exists" });
+        }
+        console.error("Edit group error:", error);
+        res.status(500).json({ error: "Failed to update group" });
     }
 });
 

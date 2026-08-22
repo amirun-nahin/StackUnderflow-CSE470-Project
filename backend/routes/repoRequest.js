@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
 const RepoRequestJoin = require('../models/RepoRequestJoin');
+const GroupMember = require('../models/GroupMember');
 const { validateToken } = require('../middlewares/AuthMiddleware');
 
 // Small helper so both routes consistently reject non-repo-request posts
@@ -44,6 +45,22 @@ router.post('/:postId/join', validateToken, async (req, res) => {
         }
 
         const join = await RepoRequestJoin.create({ UserId: req.user.id, PostId: postId });
+        // Scheduled Collaboration: joining the repo request also adds you to
+        // its auto-created private group as a MEMBER (admin assigns roles from there).
+        if (post.RepoGroupId) {
+            const existingMembership = await GroupMember.findOne({
+                where: { GroupId: post.RepoGroupId, UserId: req.user.id }
+            });
+            if (!existingMembership) {
+                await GroupMember.create({
+                    UserId: req.user.id,
+                    GroupId: post.RepoGroupId,
+                    role: 'MEMBER',
+                    status: 'APPROVED'
+                });
+            }
+        }
+
         res.status(201).json(join);
     } catch (error) {
         console.error('Error joining repository request:', error);
@@ -62,6 +79,16 @@ router.delete('/:postId/join', validateToken, async (req, res) => {
             return res.status(404).json({ error: 'You have not joined this repository request' });
         }
         await join.destroy();
+        const post = await Post.findByPk(postId);
+        if (post?.RepoGroupId) {
+            const membership = await GroupMember.findOne({
+                where: { GroupId: post.RepoGroupId, UserId: req.user.id }
+            });
+            if (membership && membership.role !== 'ADMIN') {
+                await membership.destroy();
+            }
+        }
+
         res.json({ message: 'Left the repository request successfully' });
     } catch (error) {
         console.error('Error leaving repository request:', error);

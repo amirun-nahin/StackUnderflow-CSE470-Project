@@ -21,6 +21,8 @@ const DuelSubmission = require('./models/DuelSubmission');
 const Notification = require('./models/Notification');
 const QuizAttempt = require('./models/QuizAttempt');
 const RepoRequestJoin = require('./models/RepoRequestJoin');
+const Meeting = require('./models/Meeting');
+const Announcement = require('./models/Announcement');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -60,6 +62,9 @@ app.use('/api/news', newsRoutes);
 const jobRoutes = require('./routes/jobs');
 app.use('/api/jobs', jobRoutes);
 
+const milestonesRoutes = require('./routes/milestones');
+app.use('/api/milestones', milestonesRoutes);
+
 const duelRoutes = require('./routes/duel');
 app.use('/api/duel', duelRoutes);
 
@@ -77,6 +82,12 @@ app.use('/api/repo-request', repoRequestRoutes);
 
 const searchRoutes = require('./routes/search');
 app.use('/api/search', searchRoutes);
+
+const meetingRoutes = require('./routes/meetings');
+app.use('/api/groups', meetingRoutes);
+
+const announcementRoutes = require('./routes/announcements');
+app.use('/api/groups', announcementRoutes);
 
 // Fallback Route
 app.get('/', (req, res) => {
@@ -173,6 +184,23 @@ RepoRequestJoin.belongsTo(Post);
 // Daily Quiz Attempts
 User.hasMany(QuizAttempt);
 QuizAttempt.belongsTo(User);
+
+// Scheduled Collaboration: Meetings
+Group.hasMany(Meeting);
+Meeting.belongsTo(Group);
+User.hasMany(Meeting, { as: 'ScheduledMeetings', foreignKey: 'ScheduledByUserId' });
+Meeting.belongsTo(User, { as: 'ScheduledBy', foreignKey: 'ScheduledByUserId' });
+
+// Scheduled Collaboration: Announcements
+Group.hasMany(Announcement);
+Announcement.belongsTo(Group);
+User.hasMany(Announcement);
+Announcement.belongsTo(User);
+
+// Scheduled Collaboration: a Repository Request post spawns its own private Group
+Post.belongsTo(Group, { as: 'RepoGroup', foreignKey: 'RepoGroupId' });
+Group.hasOne(Post, { as: 'RepoRequestPost', foreignKey: 'RepoGroupId' });
+
 
 // Database Sync and Server Start
 sequelize.sync().then(() => { //sequelize.sync({ alter: true }).then(() => {

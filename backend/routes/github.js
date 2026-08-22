@@ -59,9 +59,12 @@ router.post('/connect', validateToken, async (req, res) => {
 
         user.github_username = ghUser.login;
         user.github_access_token = access_token;
+        // Keep the profile's public GitHub link in sync automatically —
+        // no need for the user to type it in manually anymore.
+        user.github_profile = ghUser.html_url || `https://github.com/${ghUser.login}`;
         await user.save();
 
-        res.json({ connected: true, github_username: user.github_username });
+        res.json({ connected: true, github_username: user.github_username, github_profile: user.github_profile });
     } catch (error) {
         console.error('Error connecting GitHub account:', error);
         res.status(500).json({ error: 'Failed to connect GitHub account' });

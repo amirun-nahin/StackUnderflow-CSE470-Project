@@ -209,6 +209,11 @@ const PostCard = ({ post, isDetailView = false, onRepoJoinChange }) => {
             <span className={`repo-meta-chip ${isFull ? "repo-meta-chip--full" : ""}`}>
               👥 {joins.length}/{post.people_needed ?? "?"} joined
             </span>
+            {post.RepoGroup && (isOwnRepoRequest || hasJoined) && (
+              <Link to={`/group/${post.RepoGroup.id}`} className="repo-meta-chip repo-meta-chip--link">
+                💬 Go to Group
+              </Link>
+            )}
           </div>
         )}
         {post.code_snippet && (
