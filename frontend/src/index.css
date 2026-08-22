@@ -1229,13 +1229,32 @@ textarea {
 }
 
 .group-detail-title-row {
-  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
 }
 .group-detail-title-row h1 {
   margin-bottom: 0;
+}
+.icon-menu-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-ink-muted);
+  font-size: var(--text-md);
+  line-height: 1;
+}
+.icon-menu-btn:hover {
+  background-color: var(--color-surface-sunken);
+  color: var(--color-ink);
+  border-color: var(--color-border-strong);
 }
 
 .group-detail-badges {

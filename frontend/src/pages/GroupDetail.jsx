@@ -28,6 +28,11 @@ const GroupDetail = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [showAdminModal, setShowAdminModal] = useState(false);
 
+  // Admin modal: editable name/description
+  const [editGroupName, setEditGroupName] = useState("");
+  const [editGroupDescription, setEditGroupDescription] = useState("");
+  const [savingGroupEdit, setSavingGroupEdit] = useState(false);
+
   // Unified create form: a Post, an Announcement, or a Meeting
   const [postType, setPostType] = useState("POST");
   const [textContent, setTextContent] = useState("");
@@ -274,12 +279,7 @@ const GroupDetail = () => {
 
   // Action: Member Leaves Group
   const handleLeaveGroup = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to leave this group?",
-      )
-    )
-      return;
+    if (!window.confirm("Are you sure you want to leave this group?")) return;
 
     try {
       const response = await fetch(
@@ -290,7 +290,7 @@ const GroupDetail = () => {
         },
       );
       if (response.ok) {
-        navigate("/groups"); // Send user back to the groups tab
+        navigate("/groups");
       } else {
         const errData = await response.json();
         setErrorMessage(errData.error || "Failed to leave group.");
@@ -316,7 +316,7 @@ const GroupDetail = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
-        navigate("/groups"); // Send admin back to the groups tab
+        navigate("/groups");
       } else {
         const errData = await response.json();
         setErrorMessage(errData.error || "Failed to delete group.");
@@ -351,6 +351,46 @@ const GroupDetail = () => {
     } catch (error) {
       console.error("Assign role error:", error);
       setErrorMessage("Could not connect to the server.");
+    }
+  };
+
+  // Open the admin menu, pre-filling the edit fields with current values
+  const openAdminModal = () => {
+    setEditGroupName(group.name);
+    setEditGroupDescription(group.description || "");
+    setShowAdminModal(true);
+  };
+
+  // Action: Admin saves the edited name/description
+  const handleSaveGroupEdit = async (e) => {
+    e.preventDefault();
+    if (!editGroupName.trim()) return;
+
+    setSavingGroupEdit(true);
+    try {
+      const response = await fetch(`http://localhost:3001/api/groups/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: editGroupName,
+          description: editGroupDescription,
+        }),
+      });
+      if (response.ok) {
+        setErrorMessage("");
+        fetchAllData();
+      } else {
+        const errData = await response.json();
+        setErrorMessage(errData.error || "Failed to update group.");
+      }
+    } catch (error) {
+      console.error("Edit group error:", error);
+      setErrorMessage("Could not connect to the server.");
+    } finally {
+      setSavingGroupEdit(false);
     }
   };
 
@@ -407,17 +447,21 @@ const GroupDetail = () => {
             <div className="panel group-detail-header">
               <div className="group-detail-title-row">
                 <h1 className="discover-heading">{group.name}</h1>
-                {isAdmin && (
-                  <button className="btn btn-outline btn-sm" onClick={() => setShowAdminModal(true)}>
-                    ⚙ Admin
-                  </button>
-                )}
               </div>
               <p className="post-text">{group.description}</p>
               <div className="group-detail-badges">
                 <span className="category-chip category-chip--bounty">
                   {members.length} Members
                 </span>
+                                {isAdmin && (
+                  <button
+                    className="icon-menu-btn"
+                    onClick={openAdminModal}
+                    aria-label="Group settings"
+                  >
+                    ⋮
+                  </button>
+                )}
               </div>
               <div className="group-detail-actions">
                 {!isAdmin && (
@@ -582,21 +626,52 @@ const GroupDetail = () => {
         <div className="modal-overlay" onClick={() => setShowAdminModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Admin Panel</h3>
+              <h3>Group Settings</h3>
               <button className="modal-close-btn" onClick={() => setShowAdminModal(false)}>✕</button>
             </div>
 
-            <div className="admin-panel-header">
-              <span className="admin-panel-status">
-                Current Status: <strong>{group.is_private ? "Private" : "Public"}</strong>
-              </span>
-              <div className="admin-panel-actions">
-                <button className="btn btn-outline btn-sm" onClick={handleTogglePrivacy}>
-                  Switch to {group.is_private ? "Public" : "Private"}
+            <form onSubmit={handleSaveGroupEdit} className="profile-edit-form">
+              <div className="input-group">
+                <label>Group Name</label>
+                <input
+                  type="text"
+                  value={editGroupName}
+                  onChange={(e) => setEditGroupName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="input-group">
+                <label>Description</label>
+                <textarea
+                  className="post-textarea"
+                  value={editGroupDescription}
+                  onChange={(e) => setEditGroupDescription(e.target.value)}
+                />
+              </div>
+              <div className="profile-edit-actions">
+                <button type="submit" className="btn btn-primary btn-sm" disabled={savingGroupEdit}>
+                  {savingGroupEdit ? "Saving..." : "Save Changes"}
                 </button>
-                <button className="btn btn-ghost btn-ghost--danger btn-sm" onClick={handleDeleteGroup}>
-                  Delete Group
-                </button>
+
+              </div>
+            <div classname= "group">  
+            </div>
+            </form>
+
+            <div className="admin-panel-requests">
+              <h4 className="admin-panel-subtitle">Privacy &amp; Danger Zone</h4>
+              <div className="admin-panel-header">
+                <span className="admin-panel-status">
+                  Current Status: <strong>{group.is_private ? "Private" : "Public"}</strong>
+                </span>
+                <div className="admin-panel-actions">
+                  <button className="btn btn-outline btn-sm" onClick={handleTogglePrivacy}>
+                    Switch to {group.is_private ? "Public" : "Private"}
+                  </button>
+                  <button className="btn btn-ghost btn-ghost--danger btn-sm" onClick={handleDeleteGroup}>
+                    Delete Group
+                  </button>
+                </div>
               </div>
             </div>
 
