@@ -2803,3 +2803,144 @@ a.post-card {
 .profile-award-medal:hover {
   transform: scale(1.15);
 }
+
+/* -------------------------------------------------------------------------
+   20. Milestones & Awards
+   ------------------------------------------------------------------------- */
+
+/* Profile CTA — "Milestones & Awards" entry point */
+.milestone-cta-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background-color: var(--color-accent-tint);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-ink);
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+.milestone-cta-btn:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+.milestone-cta-btn__icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+.milestone-cta-btn__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.milestone-cta-btn__text strong {
+  font-size: var(--text-md);
+}
+.milestone-cta-btn__text span:last-child {
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+.milestone-cta-btn__arrow {
+  font-size: var(--text-lg);
+  color: var(--color-accent-strong);
+}
+
+/* Competition award medals (profile bio) */
+.profile-awards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.profile-awards__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.profile-awards__medals {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+.profile-award-medal {
+  font-size: var(--text-lg);
+  line-height: 1;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+.profile-award-medal:hover {
+  transform: scale(1.15);
+}
+
+/* Milestones page — bar charts */
+.bar-chart {
+  margin-bottom: var(--space-5);
+}
+.bar-chart__bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: var(--space-4);
+  height: 220px;
+  padding-top: var(--space-4);
+}
+.bar-chart__bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  height: 100%;
+  justify-content: flex-end;
+}
+.bar-chart__bar-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-ink);
+  margin-bottom: var(--space-2);
+}
+.bar-chart__bar-track {
+  width: 100%;
+  max-width: 64px;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  background-color: var(--color-surface-sunken);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.bar-chart__bar-fill {
+  width: 100%;
+  min-height: 4px;
+  background-color: var(--color-accent);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: height 0.3s ease;
+}
+.bar-chart__bar-fill--highlight {
+  background-color: var(--color-up);
+}
+.bar-chart__bar-label {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+  text-align: center;
+}
+
+/* Milestones page — small stat cards (Followers, Repo Requests) */
+.milestone-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+.milestone-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-5);
+}

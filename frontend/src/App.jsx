@@ -24,6 +24,7 @@ import Challenges from "./pages/Challenges";
 import DuelDetail from "./pages/DuelDetail";
 import NotificationBell from "./components/NotificationBell";
 import SearchBar from "./components/SearchBar";
+import Milestones from "./pages/Milestones";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("accessToken");
@@ -171,6 +172,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/milestones"
+          element={
+            <ProtectedRoute>
+              <Milestones />
             </ProtectedRoute>
           }
         />

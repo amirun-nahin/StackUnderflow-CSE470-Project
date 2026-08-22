@@ -62,6 +62,9 @@ app.use('/api/news', newsRoutes);
 const jobRoutes = require('./routes/jobs');
 app.use('/api/jobs', jobRoutes);
 
+const milestonesRoutes = require('./routes/milestones');
+app.use('/api/milestones', milestonesRoutes);
+
 const duelRoutes = require('./routes/duel');
 app.use('/api/duel', duelRoutes);
 

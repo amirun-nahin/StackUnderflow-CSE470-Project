@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 
-// Shown on a profile page for the "Open-Source Collaboration" feature.
-// - On your own profile: fetches live connection status, lets you connect
-//   (via a GitHub username + Personal Access Token — GitHub retired
-//   third-party username/password login years ago, so a PAT is the
-//   supported way to act on your behalf) or disconnect, and lists your repos.
-// - On someone else's profile: just shows whether they've linked GitHub,
-//   using the (non-sensitive) github_username already present on their
-//   profile data — their access token is never sent to the client.
-const GitHubConnect = ({ isMyProfile, profileGithubUsername, token }) => {
+// Shown on your own profile page for the "Open-Source Collaboration" feature:
+// fetches live connection status, lets you connect (via a GitHub username +
+// Personal Access Token — GitHub retired third-party username/password login
+// years ago, so a PAT is the supported way to act on your behalf) or
+// disconnect, and lists your repos. Not shown on other users' profiles —
+// their public GitHub link (auto-filled from their connection) already
+// appears under their bio.
+const GitHubConnect = ({ isMyProfile, token, onConnected }) => {
     const [status, setStatus] = useState(null); // { connected, github_username }
     const [loadingStatus, setLoadingStatus] = useState(isMyProfile);
 
@@ -70,6 +69,7 @@ const GitHubConnect = ({ isMyProfile, profileGithubUsername, token }) => {
                 setShowConnectModal(false);
                 setConnectUsername('');
                 setConnectTokenInput('');
+                if (onConnected) onConnected();
             } else {
                 setConnectError(data.error || 'Failed to connect GitHub account');
             }
@@ -118,26 +118,9 @@ const GitHubConnect = ({ isMyProfile, profileGithubUsername, token }) => {
         }
     };
 
-    // --- Read-only view for someone else's profile ---
-    if (!isMyProfile) {
-        return (
-            <div className="github-panel">
-                <h3 className="profile-field__label">GitHub</h3>
-                <div className="github-status-row">
-                    {profileGithubUsername ? (
-                        <span className="github-status-badge github-status-badge--connected">
-                            ✅ Connected to GitHub as {profileGithubUsername}
-                        </span>
-                    ) : (
-                        <span className="github-status-badge github-status-badge--disconnected">
-                            Not connected to GitHub
-                        </span>
-                    )}
-                </div>
-            </div>
-        );
-    }
-
+    // Not shown at all on other users' profiles — see the comment above.
+    if (!isMyProfile) return null;
+    
     // --- Interactive view for your own profile ---
     return (
         <div className="github-panel">

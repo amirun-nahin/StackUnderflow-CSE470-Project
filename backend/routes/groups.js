@@ -395,4 +395,38 @@ router.delete("/:groupId/leave", validateToken, async (req, res) => {
     }
 });
 
+// Admin: Edit group name/description
+router.put("/:groupId", validateToken, async (req, res) => {
+    try {
+        const { name, description } = req.body;
+
+        const isAdmin = await GroupMember.findOne({
+            where: { GroupId: req.params.groupId, UserId: req.user.id, role: "ADMIN" }
+        });
+        if (!isAdmin) return res.status(403).json({ error: "Only the admin can edit this group" });
+
+        const group = await Group.findByPk(req.params.groupId);
+        if (!group) return res.status(404).json({ error: "Group not found" });
+
+        if (name !== undefined) {
+            if (!name.trim()) {
+                return res.status(400).json({ error: "Group name cannot be empty" });
+            }
+            group.name = name.trim();
+        }
+        if (description !== undefined) {
+            group.description = description.trim();
+        }
+
+        await group.save();
+        res.json({ message: "Group updated", name: group.name, description: group.description });
+    } catch (error) {
+        if (error.name === "SequelizeUniqueConstraintError") {
+            return res.status(400).json({ error: "A group with that name already exists" });
+        }
+        console.error("Edit group error:", error);
+        res.status(500).json({ error: "Failed to update group" });
+    }
+});
+
 module.exports = router;

@@ -81,6 +81,24 @@ const Profile = () => {
         else navigate('/login');
     }, [username, token, navigate, myUsername]);
 
+    // Re-fetches the profile — used after connecting GitHub, so the
+    // auto-populated GitHub link under the bio shows up immediately.
+    const refetchProfile = async () => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/users/${username}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const safeTechStack = parseTechStack(data.tech_stack);
+                setProfile({ ...data, tech_stack: safeTechStack });
+                setFormData((prev) => ({ ...prev, github_profile: data.github_profile || '' }));
+            }
+        } catch (error) {
+            console.error("Failed to refresh profile", error);
+        }
+    };
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -231,6 +249,16 @@ const Profile = () => {
                         {isFollowing ? 'Unfollow' : 'Follow'}
                     </button>
                 )}
+                {isMyProfile && (
+                    <Link to="/milestones" className="milestone-cta-btn">
+                        <span className="milestone-cta-btnicon">🏆</span>
+                        <span className="milestone-cta-btntext">
+                            <strong>Milestones & Awards</strong>
+                            <span>Track your progress and achievements</span>
+                        </span>
+                        <span className="milestone-cta-btn__arrow">→</span>
+                    </Link>
+                )}
             </div>
 
             <div className="profile-body panel">
@@ -296,8 +324,8 @@ const Profile = () => {
                         </div>
                         <GitHubConnect
                             isMyProfile={isMyProfile}
-                            profileGithubUsername={profile.github_username}
                             token={token}
+                            onConnected={refetchProfile}
                         />
                     </div>
                 ) : (
