@@ -23,6 +23,7 @@ const QuizAttempt = require('./models/QuizAttempt');
 const RepoRequestJoin = require('./models/RepoRequestJoin');
 const Meeting = require('./models/Meeting');
 const Announcement = require('./models/Announcement');
+const CodeComment = require('./models/CodeComment');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -200,6 +201,12 @@ Announcement.belongsTo(User);
 // Scheduled Collaboration: a Repository Request post spawns its own private Group
 Post.belongsTo(Group, { as: 'RepoGroup', foreignKey: 'RepoGroupId' });
 Group.hasOne(Post, { as: 'RepoRequestPost', foreignKey: 'RepoGroupId' });
+
+// Peer Review: inline line-level code comments on a post's code snippet
+Post.hasMany(CodeComment);
+CodeComment.belongsTo(Post);
+User.hasMany(CodeComment);
+CodeComment.belongsTo(User);
 
 
 // Database Sync and Server Start

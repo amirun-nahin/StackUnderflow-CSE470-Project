@@ -8,6 +8,7 @@ const { validateToken } = require('../middlewares/AuthMiddleware');
 const RepoRequestJoin = require('../models/RepoRequestJoin');
 const Group = require('../models/Group');
 const GroupMember = require('../models/GroupMember');
+const CodeComment = require('../models/CodeComment');
 
 // Feed Routes
 // Get Global Feed
@@ -95,7 +96,8 @@ router.get('/:postId', validateToken, async (req, res) => {
                     order: [['createdAt', 'ASC']]
                 },
                 { model: RepoRequestJoin, include: [{ model: User, attributes: ['id', 'username', 'profile_picture'] }] },
-                { model: Group, as: 'RepoGroup', attributes: ['id', 'name'] }
+                { model: Group, as: 'RepoGroup', attributes: ['id', 'name'] },
+                { model: CodeComment, include: [{ model: User, attributes: ['id', 'username'] }] }
             ]
         });
 
@@ -221,10 +223,11 @@ router.post('/:postId/vote', validateToken, async (req, res) => {
 router.post('/:postId/comment', validateToken, async (req, res) => {
     try {
         const { postId } = req.params;
-        const { text_content, ParentId } = req.body; 
+        const { text_content, code_snippet, ParentId } = req.body; 
 
         const newComment = await Comment.create({
             text_content,
+            code_snippet: code_snippet || null,
             UserId: req.user.id,
             PostId: postId,
             ParentId: ParentId || null 
@@ -234,6 +237,42 @@ router.post('/:postId/comment', validateToken, async (req, res) => {
     } catch (error) {
         console.error("Error posting comment:", error);
         res.status(500).json({ error: 'Failed to post comment' });
+    }
+});
+// Create an inline line comment on a Peer Review post's code snippet
+router.post('/:postId/code-comments', validateToken, async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const { line_number, text_content } = req.body;
+
+        if (!line_number || !text_content || !text_content.trim()) {
+            return res.status(400).json({ error: 'A line number and comment text are required' });
+        }
+
+        const post = await Post.findByPk(postId);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        if (post.category !== 'PEER_REVIEW') {
+            return res.status(400).json({ error: 'Inline code comments are only available on Peer Review posts' });
+        }
+        if (!post.code_snippet) {
+            return res.status(400).json({ error: 'This post has no code snippet to comment on' });
+        }
+
+        const codeComment = await CodeComment.create({
+            line_number: Number(line_number),
+            text_content: text_content.trim(),
+            UserId: req.user.id,
+            PostId: postId
+        });
+
+        const codeCommentWithUser = await CodeComment.findByPk(codeComment.id, {
+            include: [{ model: User, attributes: ['id', 'username'] }]
+        });
+
+        res.status(201).json(codeCommentWithUser);
+    } catch (error) {
+        console.error("Error posting code comment:", error);
+        res.status(500).json({ error: 'Failed to post code comment' });
     }
 });
 

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import CodeBlock from "./CodeBlock";
 
-const PostCard = ({ post, isDetailView = false, onRepoJoinChange }) => {
+const PostCard = ({ post, isDetailView = false, onRepoJoinChange, onAddCodeComment }) => {
   const [upvotes, setUpvotes] = useState(0);
   const [downvotes, setDownvotes] = useState(0);
   const [userVote, setUserVote] = useState(null);
@@ -217,11 +218,12 @@ const PostCard = ({ post, isDetailView = false, onRepoJoinChange }) => {
           </div>
         )}
         {post.code_snippet && (
-          <div className="code-block">
-            <pre>
-              <code>{post.code_snippet}</code>
-            </pre>
-          </div>
+          <CodeBlock
+            code={post.code_snippet}
+            commentable={isDetailView && post.category === "PEER_REVIEW"}
+            comments={post.CodeComments || []}
+            onAddComment={onAddCodeComment}
+          />
         )}
       </div>
 

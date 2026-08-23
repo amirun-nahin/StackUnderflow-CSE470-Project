@@ -1,15 +1,20 @@
 import { useState } from 'react';
+import CodeBlock from './CodeBlock';
 
 // Added handleDeleteComment and myUserId to the props
 const CommentNode = ({ comment, handleAddReply, handleDeleteComment, myUserId }) => {
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState('');
+    const [replyCode, setReplyCode] = useState('');
+    const [showReplyCode, setShowReplyCode] = useState(false);
 
     const submitReply = (e) => {
         e.preventDefault();
-        handleAddReply(comment.id, replyText);
+        handleAddReply(comment.id, replyText, showReplyCode ? replyCode : null);
         setIsReplying(false);
         setReplyText('');
+        setReplyCode('');
+        setShowReplyCode(false);
     };
 
     return (
@@ -23,6 +28,10 @@ const CommentNode = ({ comment, handleAddReply, handleDeleteComment, myUserId })
                 <p className="comment__text">
                     {comment.is_deleted ? '[The comment is deleted]' : comment.text_content}
                 </p>
+
+                {!comment.is_deleted && comment.code_snippet && (
+                    <CodeBlock code={comment.code_snippet} />
+                )}
 
                 {/* Only show actions if the comment is NOT deleted */}
                 {!comment.is_deleted && (
@@ -47,7 +56,7 @@ const CommentNode = ({ comment, handleAddReply, handleDeleteComment, myUserId })
                 )}
 
                 {isReplying && !comment.is_deleted && (
-                    <form onSubmit={submitReply} className="comment__reply-form">
+                    <form onSubmit={submitReply} className="comment__reply-form comment__reply-form--stacked">
                         <input
                             type="text"
                             value={replyText}
@@ -55,7 +64,24 @@ const CommentNode = ({ comment, handleAddReply, handleDeleteComment, myUserId })
                             placeholder="Write a reply..."
                             autoFocus
                         />
-                        <button type="submit" className="btn btn-primary btn-sm">Post</button>
+                        {showReplyCode && (
+                            <textarea
+                                className="code-textarea"
+                                value={replyCode}
+                                onChange={(e) => setReplyCode(e.target.value)}
+                                placeholder="Paste code snippet..."
+                            />
+                        )}
+                        <div className="comment__reply-form-actions">
+                            <button
+                                type="button"
+                                className="btn-ghost btn-sm"
+                                onClick={() => setShowReplyCode(!showReplyCode)}
+                            >
+                                {showReplyCode ? '- Remove Code' : '+ Add Code'}
+                            </button>
+                            <button type="submit" className="btn btn-primary btn-sm">Post</button>
+                        </div>
                     </form>
                 )}
             </div>
