@@ -24,6 +24,8 @@ const RepoRequestJoin = require('./models/RepoRequestJoin');
 const Meeting = require('./models/Meeting');
 const Announcement = require('./models/Announcement');
 const CodeComment = require('./models/CodeComment');
+const Portfolio = require('./models/Portfolio');
+const PortfolioItem = require('./models/PortfolioItem');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -65,6 +67,9 @@ app.use('/api/jobs', jobRoutes);
 
 const milestonesRoutes = require('./routes/milestones');
 app.use('/api/milestones', milestonesRoutes);
+
+const portfolioRoutes = require('./routes/portfolio');
+app.use('/api/portfolio', portfolioRoutes);
 
 const duelRoutes = require('./routes/duel');
 app.use('/api/duel', duelRoutes);
@@ -207,6 +212,12 @@ Post.hasMany(CodeComment);
 CodeComment.belongsTo(Post);
 User.hasMany(CodeComment);
 CodeComment.belongsTo(User);
+
+// Auto-Generated Portfolio
+User.hasOne(Portfolio);
+Portfolio.belongsTo(User);
+Portfolio.hasMany(PortfolioItem);
+PortfolioItem.belongsTo(Portfolio);
 
 
 // Database Sync and Server Start

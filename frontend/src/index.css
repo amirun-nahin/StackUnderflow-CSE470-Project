@@ -3070,3 +3070,134 @@ a.post-card {
   text-align: center;
   padding: var(--space-5);
 }
+
+/* -------------------------------------------------------------------------
+   25. Extra page (hub for extra features) + Auto-Generated Portfolio
+   ------------------------------------------------------------------------- */
+.extra-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 320px;
+  grid-template-areas: "nav main options";
+  gap: var(--space-5);
+  max-width: 1400px;
+  margin: var(--space-6) auto;
+  padding: 0 var(--space-5) var(--space-8);
+}
+
+.extra-nav {
+  grid-area: nav;
+  position: sticky;
+  top: calc(64px + var(--space-5));
+  align-self: start;
+}
+.extra-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+.extra-nav-item {
+  text-align: left;
+  background: none;
+  border: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+.extra-nav-item:hover {
+  background-color: var(--color-surface-sunken);
+  color: var(--color-ink);
+}
+.extra-nav-item--active {
+  background-color: var(--color-accent-tint);
+  color: var(--color-accent-strong);
+  font-weight: 600;
+}
+
+.extra-main {
+  grid-area: main;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.extra-options {
+  grid-area: options;
+  position: sticky;
+  top: calc(64px + var(--space-5));
+  max-height: calc(100vh - 64px - 2 * var(--space-5));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (max-width: 1080px) {
+  .extra-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas: "main" "nav" "options";
+  }
+  .extra-nav,
+  .extra-options {
+    position: static;
+    max-height: none;
+  }
+}
+
+.portfolio-headline-panel {
+  margin-bottom: 0;
+}
+.portfolio-headline-text {
+  font-size: var(--text-md);
+  line-height: 1.6;
+  color: var(--color-ink);
+  margin-top: var(--space-3);
+}
+
+.portfolio-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+.portfolio-item-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-2);
+}
+
+.portfolio-template-picker {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* Template visual variants */
+.portfolio-view--minimal .portfolio-headline-panel {
+  border-left: 3px solid var(--color-accent);
+}
+.portfolio-view--minimal .portfolio-item-card {
+  border-left: 3px solid var(--color-border-strong);
+}
+
+.portfolio-view--modern .portfolio-headline-panel {
+  background: linear-gradient(135deg, var(--color-accent-tint), var(--color-surface));
+}
+.portfolio-view--modern .portfolio-item-card {
+  border-top: 3px solid var(--color-accent);
+}
+
+.portfolio-view--classic .portfolio-headline-panel {
+  text-align: center;
+  border-bottom: 2px solid var(--color-border-strong);
+}
+.portfolio-view--classic .portfolio-headline-panel h1 {
+  font-family: var(--font-mono);
+}
+.portfolio-view--classic .portfolio-item-card {
+  text-align: center;
+}
