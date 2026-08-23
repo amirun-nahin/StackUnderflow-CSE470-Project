@@ -6,6 +6,10 @@ const Comment = sequelize.define('Comment', {
         type: DataTypes.TEXT,
         allowNull: false,
     },
+    code_snippet: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
     is_deleted: {
         type: DataTypes.BOOLEAN,
         defaultValue: false

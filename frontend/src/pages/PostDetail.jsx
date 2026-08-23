@@ -9,6 +9,8 @@ const PostDetail = () => {
     const [post, setPost] = useState(null);
     const [commentTree, setCommentTree] = useState([]);
     const [newComment, setNewComment] = useState('');
+    const [newCommentCode, setNewCommentCode] = useState('');
+    const [showCommentCode, setShowCommentCode] = useState(false);
     const [loading, setLoading] = useState(true);
 
     const token = localStorage.getItem('accessToken');
@@ -79,7 +81,7 @@ const PostDetail = () => {
             const response = await fetch(`http://localhost:3001/api/posts/${id}/comment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ text_content: newComment })
+                body: JSON.stringify({ text_content: newComment, code_snippet: showCommentCode ? newCommentCode : null })
             });
 
             if (response.ok) {
@@ -92,20 +94,22 @@ const PostDetail = () => {
                 setPost({ ...post, Comments: newFlatList });
                 setCommentTree(buildTree(newFlatList));
                 setNewComment('');
+                setNewCommentCode('');
+                setShowCommentCode(false);
             }
         } catch (error) {
             console.error("Failed to post comment", error);
         }
     };
 
-    const handleAddReply = async (parentId, text) => {
+    const handleAddReply = async (parentId, text, code) => {
         if (!text.trim()) return;
 
         try {
             const response = await fetch(`http://localhost:3001/api/posts/${id}/comment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ text_content: text, ParentId: parentId })
+                body: JSON.stringify({ text_content: text, code_snippet: code || null, ParentId: parentId })
             });
 
             if (response.ok) {
@@ -120,6 +124,27 @@ const PostDetail = () => {
             }
         } catch (error) {
             console.error("Failed to post reply", error);
+        }
+    };
+
+    // Add an inline line comment to a Peer Review post's code snippet
+    const handleAddCodeComment = async (lineNumber, text) => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/posts/${id}/code-comments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ line_number: lineNumber, text_content: text })
+            });
+
+            if (response.ok) {
+                const newCodeComment = await response.json();
+                setPost((prev) => ({
+                    ...prev,
+                    CodeComments: [...(prev.CodeComments || []), newCodeComment]
+                }));
+            }
+        } catch (error) {
+            console.error("Failed to post code comment", error);
         }
     };
 
@@ -163,6 +188,7 @@ const PostDetail = () => {
                 onRepoJoinChange={(updatedJoins) =>
                     setPost((prev) => ({ ...prev, RepoRequestJoins: updatedJoins }))
                 }
+                onAddCodeComment={handleAddCodeComment}
             />
 
             {post.category === "REPO_REQUEST" && (
@@ -188,14 +214,31 @@ const PostDetail = () => {
             <div className="comments-section panel">
                 <h3>Discussion</h3>
 
-                <form onSubmit={handleAddComment} className="comment-form-row">
-                    <input
-                        type="text"
+                <form onSubmit={handleAddComment} className="comment-form-row comment-form-row--stacked">
+                    <textarea
+                        className="post-textarea"
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         placeholder="Add a new top-level comment..."
                     />
-                    <button type="submit" className="btn btn-primary">Post</button>
+                    {showCommentCode && (
+                        <textarea
+                            className="code-textarea"
+                            value={newCommentCode}
+                            onChange={(e) => setNewCommentCode(e.target.value)}
+                            placeholder="Paste code snippet..."
+                        />
+                    )}
+                    <div className="create-post-actions">
+                        <button
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            onClick={() => setShowCommentCode(!showCommentCode)}
+                        >
+                            {showCommentCode ? '- Remove Code' : '+ Add Code'}
+                        </button>
+                        <button type="submit" className="btn btn-primary">Post</button>
+                    </div>
                 </form>
 
                 {commentTree.length > 0 ? (
