@@ -10,8 +10,8 @@ const { validateToken } = require('../middlewares/AuthMiddleware');
 // 2. A cooldown blocks rapid repeat calls (and repeat billing) from one user.
 // 3. Only a small, capped number of short items are sent in the prompt —
 //    never the user's full post/activity history.
-// 4. max_tokens on the request itself is capped low, since we only need a
-//    few sentences back.
+// 4. max_tokens on the request itself is still capped (not unlimited),
+//    it's just sized for a real paragraph instead of a one-liner.
 const GENERATE_COOLDOWN_MS = 60 * 1000;
 const MAX_ITEMS_IN_PROMPT = 10;
 const MAX_DESC_CHARS = 150;
@@ -143,7 +143,7 @@ router.post('/me/generate', validateToken, async (req, res) => {
             `Role: ${user.current_role || 'Developer'}\n` +
             `Tech stack: ${techStack}\n\n` +
             `Portfolio highlights:\n${highlightLines}\n\n` +
-            `Write a short, engaging professional portfolio headline/summary (3-4 sentences max, plain text only, no markdown, no headers) based on the above.`;
+            `Write an engaging professional portfolio summary (2 short paragraphs, plain text only, no markdown, no headers) based on the above. Cover their background, standout highlights from the list, and what they're focused on now.`;
 
         const aiResponse = await fetch(
             'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
@@ -155,7 +155,7 @@ router.post('/me/generate', validateToken, async (req, res) => {
                 },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: promptText }] }],
-                    generationConfig: { maxOutputTokens: 300 }
+                    generationConfig: { maxOutputTokens: 700 }
                 })
             }
         );
