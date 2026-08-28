@@ -1,8 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-// One portfolio per user. `headline` is either written by the user directly
-// (PUT /me) or generated via the AI endpoint (POST /me/generate).
+// One portfolio per user. `headline` is a short summary the user writes
+// themselves — no AI involved, keeps this feature free to regenerate.
 const Portfolio = sequelize.define('Portfolio', {
     template: {
         type: DataTypes.ENUM('MINIMAL', 'MODERN', 'CLASSIC'),
@@ -11,11 +11,6 @@ const Portfolio = sequelize.define('Portfolio', {
     },
     headline: {
         type: DataTypes.TEXT,
-        allowNull: true
-    },
-    // Used to throttle AI regeneration — see routes/portfolio.js
-    last_generated_at: {
-        type: DataTypes.DATE,
         allowNull: true
     }
 }, {

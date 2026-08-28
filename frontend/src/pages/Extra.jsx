@@ -1,21 +1,28 @@
 import { useState, useEffect } from 'react';
 
 const FEATURES = [
-    { key: 'portfolio', label: '📁 Portfolio' }
+    { key: 'portfolio', label: '📁 Portfolio' },
+    { key: 'ai-assistant', label: '🤖 AI Assistant' }
     // Future "extra" features get added here.
 ];
 
 const TEMPLATES = ['MINIMAL', 'MODERN', 'CLASSIC'];
 const ITEM_TYPES = ['PROJECT', 'SKILL', 'ACHIEVEMENT', 'EXPERIENCE', 'CUSTOM'];
+const ASSISTANT_MODES = [
+    { key: 'EXPLAIN', label: 'Explain Code' },
+    { key: 'REVIEW', label: 'Review Code' },
+    { key: 'CHAT', label: 'Ask a Question' }
+];
 
 const Extra = () => {
     const [activeFeature, setActiveFeature] = useState('portfolio');
+    const token = localStorage.getItem('accessToken');
+    const myUsername = localStorage.getItem('username');
+
+    // ---------------- Portfolio state ----------------
     const [portfolio, setPortfolio] = useState(null);
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
-
-    const [generating, setGenerating] = useState(false);
-    const [generateError, setGenerateError] = useState('');
 
     const [showAddModal, setShowAddModal] = useState(false);
     const [itemType, setItemType] = useState('PROJECT');
@@ -23,8 +30,16 @@ const Extra = () => {
     const [itemDescription, setItemDescription] = useState('');
     const [addingItem, setAddingItem] = useState(false);
 
-    const token = localStorage.getItem('accessToken');
-    const myUsername = localStorage.getItem('username');
+    const [headlineDraft, setHeadlineDraft] = useState('');
+    const [savingHeadline, setSavingHeadline] = useState(false);
+
+    // ---------------- AI Assistant state ----------------
+    const [assistantMode, setAssistantMode] = useState('EXPLAIN');
+    const [assistantCode, setAssistantCode] = useState('');
+    const [assistantQuestion, setAssistantQuestion] = useState('');
+    const [assistantAnswer, setAssistantAnswer] = useState('');
+    const [assistantLoading, setAssistantLoading] = useState(false);
+    const [assistantError, setAssistantError] = useState('');
 
     const fetchPortfolio = async () => {
         try {
@@ -32,7 +47,9 @@ const Extra = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.ok) {
-                setPortfolio(await response.json());
+                const data = await response.json();
+                setPortfolio(data);
+                setHeadlineDraft(data.headline || '');
             }
         } catch (error) {
             console.error('Failed to fetch portfolio', error);
@@ -58,6 +75,24 @@ const Extra = () => {
             }
         } catch (error) {
             console.error('Failed to update template', error);
+        }
+    };
+
+    const handleSaveHeadline = async () => {
+        setSavingHeadline(true);
+        try {
+            const response = await fetch('http://localhost:3001/api/portfolio/me', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ headline: headlineDraft })
+            });
+            if (response.ok) {
+                setPortfolio((prev) => ({ ...prev, headline: headlineDraft }));
+            }
+        } catch (error) {
+            console.error('Failed to save headline', error);
+        } finally {
+            setSavingHeadline(false);
         }
     };
 
@@ -111,34 +146,35 @@ const Extra = () => {
         }
     };
 
-    // Explicit, user-triggered only — this is the one call that costs real
-    // API tokens, so it's never fired automatically (see backend for the
-    // other token-saving measures: cooldown, capped prompt size, capped output).
-    const handleGenerate = async () => {
-        setGenerating(true);
-        setGenerateError('');
+    const handleAskAssistant = async (e) => {
+        e.preventDefault();
+        setAssistantLoading(true);
+        setAssistantError('');
+        setAssistantAnswer('');
         try {
-            const response = await fetch('http://localhost:3001/api/portfolio/me/generate', {
+            const response = await fetch('http://localhost:3001/api/ai-assistant/ask', {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ mode: assistantMode, code: assistantCode, question: assistantQuestion })
             });
             const data = await response.json();
             if (response.ok) {
-                setPortfolio((prev) => ({ ...prev, headline: data.headline, last_generated_at: data.last_generated_at }));
+                setAssistantAnswer(data.answer);
             } else {
-                setGenerateError(data.error || 'Failed to generate headline.');
+                setAssistantError(data.error || 'Failed to get a response.');
             }
         } catch (error) {
-            console.error('Failed to generate headline', error);
-            setGenerateError('Could not connect to the server.');
+            console.error('Assistant request failed', error);
+            setAssistantError('Could not connect to the server.');
         } finally {
-            setGenerating(false);
+            setAssistantLoading(false);
         }
     };
 
     if (loading) return <div className="loading-state">Loading...</div>;
 
     const templateClass = `portfolio-view--${(portfolio?.template || 'MINIMAL').toLowerCase()}`;
+    const pdfUrl = `http://localhost:3001/api/portfolio/${myUsername}/pdf?template=${portfolio?.template || 'MINIMAL'}`;
 
     return (
         <div className="extra-layout">
@@ -172,7 +208,7 @@ const Extra = () => {
                                 <p className="portfolio-headline-text">{portfolio.headline}</p>
                             ) : (
                                 <p className="empty-state">
-                                    No headline yet — add a few items, then click "Generate Headline" on the right.
+                                    No summary yet — write one from the panel on the right.
                                 </p>
                             )}
                         </div>
@@ -203,6 +239,29 @@ const Extra = () => {
                         </div>
                     </div>
                 )}
+
+                {activeFeature === 'ai-assistant' && (
+                    <div className="ai-assistant-view">
+                        <div className="panel">
+                            <h1 className="discover-heading">AI Coding Assistant</h1>
+                            <p className="empty-state">
+                                Get an instant code explanation, an automated review, or ask a general coding question.
+                            </p>
+                        </div>
+
+                        <div className="panel">
+                            {assistantLoading ? (
+                                <p className="empty-state">Thinking...</p>
+                            ) : assistantError ? (
+                                <p className="error-text">{assistantError}</p>
+                            ) : assistantAnswer ? (
+                                <div className="ai-assistant-answer">{assistantAnswer}</div>
+                            ) : (
+                                <p className="empty-state">Your answer will appear here.</p>
+                            )}
+                        </div>
+                    </div>
+                )}
             </main>
 
             {/* RIGHT: options menu for the active feature */}
@@ -222,21 +281,26 @@ const Extra = () => {
                                     </button>
                                 ))}
                             </div>
+                            <a href={pdfUrl} download className="btn btn-primary btn-sm portfolio-download-btn">
+                                ⬇ Download PDF
+                            </a>
                         </div>
 
                         <div className="panel">
-                            <h3>Headline</h3>
-                            <p className="empty-state" style={{ marginBottom: 'var(--space-3)' }}>
-                                Uses AI to write a short summary from your added items.
-                            </p>
+                            <h3>Summary</h3>
+                            <textarea
+                                className="post-textarea"
+                                value={headlineDraft}
+                                onChange={(e) => setHeadlineDraft(e.target.value)}
+                                placeholder="Write a short summary about yourself..."
+                            />
                             <button
-                                className="btn btn-primary btn-sm"
-                                onClick={handleGenerate}
-                                disabled={generating}
+                                className="btn btn-outline btn-sm"
+                                onClick={handleSaveHeadline}
+                                disabled={savingHeadline}
                             >
-                                {generating ? 'Generating...' : '✨ Generate Headline'}
+                                {savingHeadline ? 'Saving...' : 'Save Summary'}
                             </button>
-                            {generateError && <p className="error-text">{generateError}</p>}
                         </div>
 
                         <div className="panel">
@@ -246,6 +310,55 @@ const Extra = () => {
                             </button>
                         </div>
                     </>
+                )}
+
+                {activeFeature === 'ai-assistant' && (
+                    <div className="panel">
+                        <h3>Mode</h3>
+                        <div className="portfolio-template-picker">
+                            {ASSISTANT_MODES.map((m) => (
+                                <button
+                                    key={m.key}
+                                    className={`btn btn-sm ${assistantMode === m.key ? 'btn-primary' : 'btn-outline'}`}
+                                    onClick={() => setAssistantMode(m.key)}
+                                >
+                                    {m.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        <form onSubmit={handleAskAssistant} className="ai-assistant-form">
+                            {(assistantMode === 'EXPLAIN' || assistantMode === 'REVIEW') && (
+                                <textarea
+                                    className="code-textarea"
+                                    value={assistantCode}
+                                    onChange={(e) => setAssistantCode(e.target.value)}
+                                    placeholder="Paste your code here..."
+                                    required
+                                />
+                            )}
+                            {assistantMode === 'CHAT' && (
+                                <>
+                                    <textarea
+                                        className="post-textarea"
+                                        value={assistantQuestion}
+                                        onChange={(e) => setAssistantQuestion(e.target.value)}
+                                        placeholder="Ask a coding question..."
+                                        required
+                                    />
+                                    <textarea
+                                        className="code-textarea"
+                                        value={assistantCode}
+                                        onChange={(e) => setAssistantCode(e.target.value)}
+                                        placeholder="(Optional) Paste related code..."
+                                    />
+                                </>
+                            )}
+                            <button type="submit" className="btn btn-primary btn-sm" disabled={assistantLoading}>
+                                {assistantLoading ? 'Asking...' : 'Ask'}
+                            </button>
+                        </form>
+                    </div>
                 )}
             </aside>
 

@@ -1,23 +1,22 @@
 const express = require('express');
 const router = express.Router();
+const PDFDocument = require('pdfkit');
 const Portfolio = require('../models/Portfolio');
 const PortfolioItem = require('../models/PortfolioItem');
+const Post = require('../models/Post');
+const BountyEnrollment = require('../models/BountyEnrollment');
 const User = require('../models/User');
 const { validateToken } = require('../middlewares/AuthMiddleware');
 
-// --- Token-saving measures for AI generation ---
-// 1. Generation only ever happens on an explicit user click, never automatically.
-// 2. A cooldown blocks rapid repeat calls (and repeat billing) from one user.
-// 3. Only a small, capped number of short items are sent in the prompt —
-//    never the user's full post/activity history.
-// 4. max_tokens on the request itself is still capped (not unlimited),
-//    it's just sized for a real paragraph instead of a one-liner.
-const GENERATE_COOLDOWN_MS = 60 * 1000;
-const MAX_ITEMS_IN_PROMPT = 10;
-const MAX_DESC_CHARS = 150;
-
 const VALID_TEMPLATES = ['MINIMAL', 'MODERN', 'CLASSIC'];
 const VALID_TYPES = ['PROJECT', 'SKILL', 'ACHIEVEMENT', 'EXPERIENCE', 'CUSTOM'];
+const TYPE_LABELS = {
+    PROJECT: 'Projects',
+    SKILL: 'Skills',
+    ACHIEVEMENT: 'Achievements',
+    EXPERIENCE: 'Experience',
+    CUSTOM: 'More'
+};
 
 async function getOrCreatePortfolio(userId) {
     let portfolio = await Portfolio.findOne({ where: { UserId: userId } });
@@ -28,11 +27,10 @@ async function getOrCreatePortfolio(userId) {
 }
 
 // ---------------------------------------------------------------
-// Own portfolio management — registered before the /:username
-// route below so "me" is never mistaken for a username.
+// Own portfolio management — registered before /:username below
+// so "me" is never mistaken for a username.
 // ---------------------------------------------------------------
 
-// Update template choice and/or manually edit the headline
 router.put('/me', validateToken, async (req, res) => {
     try {
         const { template, headline } = req.body;
@@ -53,7 +51,6 @@ router.put('/me', validateToken, async (req, res) => {
     }
 });
 
-// Add an item
 router.post('/me/items', validateToken, async (req, res) => {
     try {
         const { type, title, description } = req.body;
@@ -83,7 +80,6 @@ router.post('/me/items', validateToken, async (req, res) => {
     }
 });
 
-// Remove an item
 router.delete('/me/items/:itemId', validateToken, async (req, res) => {
     try {
         const portfolio = await getOrCreatePortfolio(req.user.id);
@@ -101,91 +97,7 @@ router.delete('/me/items/:itemId', validateToken, async (req, res) => {
 });
 
 // ---------------------------------------------------------------
-// AI headline generation — Google AI Studio / Gemini API
-// ---------------------------------------------------------------
-router.post('/me/generate', validateToken, async (req, res) => {
-    try {
-        if (!process.env.GEMINI_API_KEY) {
-            return res.status(500).json({ error: 'AI generation is not configured on the server.' });
-        }
-
-        const portfolio = await getOrCreatePortfolio(req.user.id);
-
-        if (portfolio.last_generated_at) {
-            const elapsed = Date.now() - new Date(portfolio.last_generated_at).getTime();
-            if (elapsed < GENERATE_COOLDOWN_MS) {
-                const waitSeconds = Math.ceil((GENERATE_COOLDOWN_MS - elapsed) / 1000);
-                return res.status(429).json({ error: `Please wait ${waitSeconds}s before regenerating again.` });
-            }
-        }
-
-        const items = await PortfolioItem.findAll({
-            where: { PortfolioId: portfolio.id },
-            order: [['order', 'ASC']],
-            limit: MAX_ITEMS_IN_PROMPT
-        });
-
-        if (items.length === 0) {
-            return res.status(400).json({ error: 'Add at least one item to your portfolio before generating a headline.' });
-        }
-
-        const user = await User.findByPk(req.user.id, {
-            attributes: ['username', 'name', 'current_role', 'tech_stack']
-        });
-
-        const techStack = Array.isArray(user.tech_stack) ? user.tech_stack.join(', ') : (user.tech_stack || 'N/A');
-        const highlightLines = items
-            .map((item) => `- (${item.type}) ${item.title}${item.description ? ': ' + item.description.slice(0, MAX_DESC_CHARS) : ''}`)
-            .join('\n');
-
-        const promptText =
-            `Name: ${user.name || user.username}\n` +
-            `Role: ${user.current_role || 'Developer'}\n` +
-            `Tech stack: ${techStack}\n\n` +
-            `Portfolio highlights:\n${highlightLines}\n\n` +
-            `Write an engaging professional portfolio summary (2 short paragraphs, plain text only, no markdown, no headers) based on the above. Cover their background, standout highlights from the list, and what they're focused on now.`;
-
-        const aiResponse = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-goog-api-key': process.env.GEMINI_API_KEY
-                },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptText }] }],
-                    generationConfig: { maxOutputTokens: 700 }
-                })
-            }
-        );
-
-        if (!aiResponse.ok) {
-            const errText = await aiResponse.text();
-            console.error('AI generation error:', errText);
-            return res.status(502).json({ error: 'Failed to generate headline from the AI service.' });
-        }
-
-        const data = await aiResponse.json();
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-
-        if (!generatedText) {
-            return res.status(502).json({ error: 'The AI service returned an empty response.' });
-        }
-
-        portfolio.headline = generatedText;
-        portfolio.last_generated_at = new Date();
-        await portfolio.save();
-
-        res.json(portfolio);
-    } catch (error) {
-        console.error('Error generating portfolio headline:', error);
-        res.status(500).json({ error: 'Failed to generate headline' });
-    }
-});
-
-// ---------------------------------------------------------------
-// Public view of a portfolio by username
+// View a portfolio's data (JSON) by username — public
 // ---------------------------------------------------------------
 router.get('/:username', async (req, res) => {
     try {
@@ -207,5 +119,172 @@ router.get('/:username', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch portfolio' });
     }
 });
+
+// ---------------------------------------------------------------
+// Generate the portfolio as a PDF — entirely local, no external API,
+// so this costs nothing and can be regenerated freely.
+// ---------------------------------------------------------------
+router.get('/:username/pdf', async (req, res) => {
+    try {
+        const user = await User.findOne({ where: { username: req.params.username } });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const portfolio = await Portfolio.findOne({ where: { UserId: user.id } });
+        const template = (req.query.template || portfolio?.template || 'MINIMAL').toUpperCase();
+        if (!VALID_TEMPLATES.includes(template)) {
+            return res.status(400).json({ error: 'Invalid template' });
+        }
+
+        const items = portfolio
+            ? await PortfolioItem.findAll({ where: { PortfolioId: portfolio.id }, order: [['order', 'ASC']] })
+            : [];
+
+        const [postCount, completedBounties, followerCount] = await Promise.all([
+            Post.count({ where: { UserId: user.id } }),
+            BountyEnrollment.count({ where: { UserId: user.id, status: 'COMPLETED' } }),
+            user.countFollowers()
+        ]);
+
+        const stats = { points: user.points || 0, posts: postCount, bounties: completedBounties, followers: followerCount };
+        const techStack = Array.isArray(user.tech_stack) ? user.tech_stack : [];
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${user.username}-portfolio.pdf"`);
+
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
+        doc.pipe(res);
+
+        renderTemplate(doc, template, { user, headline: portfolio?.headline, techStack, stats, items });
+
+        doc.end();
+    } catch (error) {
+        console.error('Error generating portfolio PDF:', error);
+        res.status(500).json({ error: 'Failed to generate PDF' });
+    }
+});
+
+// ---------------------------------------------------------------
+// PDF rendering — one function per template style
+// ---------------------------------------------------------------
+function renderTemplate(doc, template, data) {
+    if (template === 'MODERN') return renderModern(doc, data);
+    if (template === 'CLASSIC') return renderClassic(doc, data);
+    return renderMinimal(doc, data);
+}
+
+function sectionItems(doc, items) {
+    const grouped = {};
+    items.forEach((item) => {
+        if (!grouped[item.type]) grouped[item.type] = [];
+        grouped[item.type].push(item);
+    });
+
+    Object.keys(TYPE_LABELS).forEach((type) => {
+        if (!grouped[type]) return;
+        doc.moveDown(0.8);
+        doc.fontSize(13).font('Helvetica-Bold').text(TYPE_LABELS[type]);
+        doc.moveDown(0.3);
+        grouped[type].forEach((item) => {
+            doc.fontSize(11).font('Helvetica-Bold').text(item.title);
+            if (item.description) {
+                doc.fontSize(10).font('Helvetica').fillColor('#444444').text(item.description);
+                doc.fillColor('#000000');
+            }
+            doc.moveDown(0.4);
+        });
+    });
+}
+
+function renderMinimal(doc, { user, headline, techStack, stats, items }) {
+    doc.fontSize(24).font('Helvetica-Bold').text(user.name || user.username);
+    doc.fontSize(12).font('Helvetica').fillColor('#555555').text(user.current_role || 'Developer');
+    doc.fillColor('#000000');
+    if (user.github_profile) {
+        doc.fontSize(9).fillColor('#0d9488').text(user.github_profile, { link: user.github_profile });
+        doc.fillColor('#000000');
+    }
+    doc.moveDown();
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#dddddd').stroke();
+    doc.moveDown();
+
+    if (headline || user.bio) {
+        doc.fontSize(11).font('Helvetica').text(headline || user.bio, { align: 'left' });
+        doc.moveDown();
+    }
+
+    if (techStack.length > 0) {
+        doc.fontSize(10).font('Helvetica-Bold').text('Tech Stack: ', { continued: true });
+        doc.font('Helvetica').text(techStack.join(', '));
+        doc.moveDown(0.5);
+    }
+
+    doc.fontSize(10).font('Helvetica').fillColor('#555555').text(
+        `${stats.points} pts   ·   ${stats.posts} posts   ·   ${stats.bounties} bounties completed   ·   ${stats.followers} followers`
+    );
+    doc.fillColor('#000000');
+
+    sectionItems(doc, items);
+}
+
+function renderModern(doc, { user, headline, techStack, stats, items }) {
+    doc.rect(0, 0, doc.page.width, 110).fill('#0d9488');
+    doc.fillColor('#ffffff').fontSize(26).font('Helvetica-Bold').text(user.name || user.username, 50, 35);
+    doc.fontSize(13).font('Helvetica').text(user.current_role || 'Developer', 50, 68);
+    doc.fillColor('#000000');
+    doc.moveDown(3.5);
+
+    if (headline || user.bio) {
+        doc.fontSize(11).font('Helvetica').text(headline || user.bio);
+        doc.moveDown();
+    }
+
+    if (user.github_profile) {
+        doc.fontSize(9).fillColor('#0d9488').text(user.github_profile, { link: user.github_profile });
+        doc.fillColor('#000000');
+        doc.moveDown(0.5);
+    }
+
+    if (techStack.length > 0) {
+        doc.fontSize(10).font('Helvetica-Bold').fillColor('#0d9488').text('TECH STACK');
+        doc.fillColor('#000000').font('Helvetica').fontSize(10).text(techStack.join('   ·   '));
+        doc.moveDown(0.5);
+    }
+
+    doc.fontSize(10).font('Helvetica-Bold').fillColor('#0d9488').text('STATS');
+    doc.fillColor('#000000').font('Helvetica').fontSize(10).text(
+        `${stats.points} pts   ·   ${stats.posts} posts   ·   ${stats.bounties} bounties completed   ·   ${stats.followers} followers`
+    );
+
+    sectionItems(doc, items);
+}
+
+function renderClassic(doc, { user, headline, techStack, stats, items }) {
+    doc.fontSize(22).font('Helvetica-Bold').text(user.name || user.username, { align: 'center' });
+    doc.fontSize(12).font('Helvetica').fillColor('#555555').text(user.current_role || 'Developer', { align: 'center' });
+    doc.fillColor('#000000');
+    if (user.github_profile) {
+        doc.fontSize(9).text(user.github_profile, { align: 'center', link: user.github_profile });
+    }
+    doc.moveDown();
+    doc.moveTo(150, doc.y).lineTo(445, doc.y).lineWidth(1.5).strokeColor('#000000').stroke();
+    doc.moveDown();
+
+    if (headline || user.bio) {
+        doc.fontSize(11).font('Helvetica-Oblique').text(headline || user.bio, { align: 'center' });
+        doc.moveDown();
+    }
+
+    if (techStack.length > 0) {
+        doc.fontSize(10).font('Helvetica').text(techStack.join(' · '), { align: 'center' });
+        doc.moveDown(0.5);
+    }
+
+    doc.fontSize(10).text(
+        `${stats.points} pts   |   ${stats.posts} posts   |   ${stats.bounties} bounties completed   |   ${stats.followers} followers`,
+        { align: 'center' }
+    );
+
+    sectionItems(doc, items);
+}
 
 module.exports = router;

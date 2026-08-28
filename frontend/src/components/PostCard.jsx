@@ -177,6 +177,10 @@ const PostCard = ({ post, isDetailView = false, onRepoJoinChange, onAddCodeComme
           <span className={`category-chip category-chip--${categoryKey}`}>
             {post.category.replace("_", " ")}
           </span>
+
+          {post.DuplicateOfPostId && (
+            <span className="category-chip category-chip--duplicate">⚠️ Possible Duplicate</span>
+          )}
         </div>
       </div>
 

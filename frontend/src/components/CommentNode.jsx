@@ -2,11 +2,14 @@ import { useState } from 'react';
 import CodeBlock from './CodeBlock';
 
 // Added handleDeleteComment and myUserId to the props
-const CommentNode = ({ comment, handleAddReply, handleDeleteComment, myUserId }) => {
+const CommentNode = ({ comment, handleAddReply, handleDeleteComment, myUserId, isPostAuthor, handleMarkBestAnswer }) => {
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [replyCode, setReplyCode] = useState('');
     const [showReplyCode, setShowReplyCode] = useState(false);
+
+    // Best answer marking only makes sense on top-level answers, not replies
+    const isTopLevel = !comment.ParentId;
 
     const submitReply = (e) => {
         e.preventDefault();
@@ -18,12 +21,15 @@ const CommentNode = ({ comment, handleAddReply, handleDeleteComment, myUserId })
     };
 
     return (
-        <div className={`comment ${comment.is_deleted ? 'comment--deleted' : ''}`}>
+        <div className={`comment ${comment.is_deleted ? 'comment--deleted' : ''} ${comment.is_best_answer ? 'comment--best-answer' : ''}`}>
 
             <div className="comment__body">
-                <strong className="comment__author">
-                    {comment.is_deleted ? '[deleted]' : comment.User?.username}
-                </strong>
+                <div className="comment__author-row">
+                    <strong className="comment__author">
+                        {comment.is_deleted ? '[deleted]' : comment.User?.username}
+                    </strong>
+                    {comment.is_best_answer && <span className="best-answer-badge">★ Best Answer</span>}
+                </div>
 
                 <p className="comment__text">
                     {comment.is_deleted ? '[The comment is deleted]' : comment.text_content}
@@ -54,6 +60,16 @@ const CommentNode = ({ comment, handleAddReply, handleDeleteComment, myUserId })
                         )}
                     </div>
                 )}
+
+                        {/* Only the post author can mark/unmark a best answer, and only on top-level answers */}
+                        {isPostAuthor && isTopLevel && (
+                            <button
+                                onClick={() => handleMarkBestAnswer(comment.id)}
+                                className="btn-ghost btn-sm"
+                            >
+                                {comment.is_best_answer ? 'Unmark Best Answer' : '★ Mark as Best Answer'}
+                            </button>
+                        )}
 
                 {isReplying && !comment.is_deleted && (
                     <form onSubmit={submitReply} className="comment__reply-form comment__reply-form--stacked">
@@ -96,6 +112,8 @@ const CommentNode = ({ comment, handleAddReply, handleDeleteComment, myUserId })
                             handleAddReply={handleAddReply}
                             handleDeleteComment={handleDeleteComment} // Keep passing it down
                             myUserId={myUserId}                       // Keep passing it down
+                            isPostAuthor={isPostAuthor}
+                            handleMarkBestAnswer={handleMarkBestAnswer}
                         />
                     ))}
                 </div>

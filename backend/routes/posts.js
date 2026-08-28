@@ -300,4 +300,177 @@ router.delete('/:postId/comment/:commentId', validateToken, async (req, res) => 
     }
 });
 
+// ---------------------------------------------------------------
+// Q&A Moderation: mark the best answer among a post's comments
+// (post author only, one best answer at a time — marking a new one
+// unmarks any previous one)
+// ---------------------------------------------------------------
+router.put('/:postId/comment/:commentId/best-answer', validateToken, async (req, res) => {
+    try {
+        const { postId, commentId } = req.params;
+
+        const post = await Post.findByPk(postId);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        if (post.UserId !== req.user.id) {
+            return res.status(403).json({ error: 'Only the post author can mark a best answer' });
+        }
+
+        const comment = await Comment.findOne({ where: { id: commentId, PostId: postId } });
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+        if (comment.is_best_answer) {
+            // Toggling off
+            comment.is_best_answer = false;
+            await comment.save();
+            return res.json({ message: 'Best answer unmarked', comment });
+        }
+
+        // Unmark any previous best answer on this post, then mark the new one
+        await Comment.update({ is_best_answer: false }, { where: { PostId: postId, is_best_answer: true } });
+        comment.is_best_answer = true;
+        await comment.save();
+
+        res.json({ message: 'Best answer marked', comment });
+    } catch (error) {
+        console.error('Error marking best answer:', error);
+        res.status(500).json({ error: 'Failed to mark best answer' });
+    }
+});
+
+// ---------------------------------------------------------------
+// Q&A Moderation: flag / dismiss a post as a duplicate of another
+// ---------------------------------------------------------------
+router.put('/:postId/flag-duplicate', validateToken, async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const { duplicate_of_post_id } = req.body;
+
+        if (!duplicate_of_post_id) {
+            return res.status(400).json({ error: 'duplicate_of_post_id is required' });
+        }
+        if (Number(duplicate_of_post_id) === Number(postId)) {
+            return res.status(400).json({ error: 'A post cannot be a duplicate of itself' });
+        }
+
+        const post = await Post.findByPk(postId);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+
+        const original = await Post.findByPk(duplicate_of_post_id);
+        if (!original) return res.status(404).json({ error: 'The referenced original post was not found' });
+
+        post.DuplicateOfPostId = duplicate_of_post_id;
+        await post.save();
+
+        res.json({ message: 'Post flagged as duplicate', DuplicateOfPostId: post.DuplicateOfPostId });
+    } catch (error) {
+        console.error('Error flagging duplicate:', error);
+        res.status(500).json({ error: 'Failed to flag as duplicate' });
+    }
+});
+
+router.delete('/:postId/flag-duplicate', validateToken, async (req, res) => {
+    try {
+        const post = await Post.findByPk(req.params.postId);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        if (post.UserId !== req.user.id) {
+            return res.status(403).json({ error: 'Only the post author can dismiss this flag' });
+        }
+
+        post.DuplicateOfPostId = null;
+        await post.save();
+
+        res.json({ message: 'Duplicate flag dismissed' });
+    } catch (error) {
+        console.error('Error dismissing duplicate flag:', error);
+        res.status(500).json({ error: 'Failed to dismiss flag' });
+    }
+});
+
+// ---------------------------------------------------------------
+// Q&A Moderation: AI-assisted best-answer suggestion (post author
+// only). Suggests a comment — does NOT mark it automatically, the
+// author still confirms via the best-answer endpoint above.
+// ---------------------------------------------------------------
+const MAX_ANSWERS_IN_PROMPT = 10;
+const MAX_ANSWER_CHARS = 400;
+
+router.post('/:postId/suggest-best-answer', validateToken, async (req, res) => {
+    try {
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(500).json({ error: 'AI suggestion is not configured on the server.' });
+        }
+
+        const { postId } = req.params;
+        const post = await Post.findByPk(postId);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        if (post.UserId !== req.user.id) {
+            return res.status(403).json({ error: 'Only the post author can request a best-answer suggestion' });
+        }
+
+        // Only top-level answers are candidates — replies are discussion, not answers
+        const answers = await Comment.findAll({
+            where: { PostId: postId, ParentId: null, is_deleted: false },
+            include: [{ model: User, attributes: ['username'] }],
+            order: [['createdAt', 'ASC']],
+            limit: MAX_ANSWERS_IN_PROMPT
+        });
+
+        if (answers.length === 0) {
+            return res.status(400).json({ error: 'There are no answers to choose from yet.' });
+        }
+
+        const answerLines = answers
+            .map((a, i) => `${i + 1}. (by ${a.User?.username}): ${a.text_content.slice(0, MAX_ANSWER_CHARS)}`)
+            .join('\n');
+
+        const promptText =
+            `Question: ${post.text_content.slice(0, 500)}\n\n` +
+            `Candidate answers:\n${answerLines}\n\n` +
+            `Which numbered answer best solves the question? Reply with ONLY the number, ` +
+            `then a dash, then a one-sentence reason. Example: "2 - It directly fixes the null check bug."`;
+
+        const aiResponse = await fetch(
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': process.env.GEMINI_API_KEY
+                },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: promptText }] }],
+                    generationConfig: { maxOutputTokens: 100 }
+                })
+            }
+        );
+
+        if (!aiResponse.ok) {
+            const errText = await aiResponse.text();
+            console.error('AI suggestion error:', errText);
+            return res.status(502).json({ error: 'Failed to get a suggestion from the AI service.' });
+        }
+
+        const data = await aiResponse.json();
+        const raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (!raw) return res.status(502).json({ error: 'The AI service returned an empty response.' });
+
+        const match = raw.match(/^(\d+)\s*-?\s*(.*)$/s);
+        const index = match ? parseInt(match[1], 10) - 1 : -1;
+        const reason = match ? match[2].trim() : raw;
+
+        if (index < 0 || index >= answers.length) {
+            return res.status(502).json({ error: 'Could not parse a suggestion from the AI response.' });
+        }
+
+        res.json({
+            suggested_comment_id: answers[index].id,
+            suggested_username: answers[index].User?.username,
+            reason
+        });
+    } catch (error) {
+        console.error('Error suggesting best answer:', error);
+        res.status(500).json({ error: 'Failed to get a suggestion' });
+    }
+});
+
 module.exports = router;
