@@ -30,6 +30,11 @@ const Extra = () => {
     const [itemDescription, setItemDescription] = useState('');
     const [addingItem, setAddingItem] = useState(false);
 
+    const [showRepoPicker, setShowRepoPicker] = useState(false);
+    const [githubRepos, setGithubRepos] = useState([]);
+    const [loadingRepos, setLoadingRepos] = useState(false);
+    const [repoError, setRepoError] = useState('');
+
     const [headlineDraft, setHeadlineDraft] = useState('');
     const [savingHeadline, setSavingHeadline] = useState(false);
 
@@ -94,6 +99,34 @@ const Extra = () => {
         } finally {
             setSavingHeadline(false);
         }
+    };
+
+    const handleOpenRepoPicker = async () => {
+        setShowRepoPicker(true);
+        setLoadingRepos(true);
+        setRepoError('');
+        try {
+            const response = await fetch('http://localhost:3001/api/github/repositories', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setGithubRepos(data);
+            } else {
+                setRepoError(data.error || 'Failed to load repositories.');
+            }
+        } catch (error) {
+            console.error('Failed to fetch repositories', error);
+            setRepoError('Could not connect to the server.');
+        } finally {
+            setLoadingRepos(false);
+        }
+    };
+
+    const handlePickRepo = (repo) => {
+        setItemTitle(repo.full_name || repo.name);
+        setItemDescription(repo.description || '');
+        setShowRepoPicker(false);
     };
 
     const handleAddItem = async (e) => {
@@ -212,7 +245,7 @@ const Extra = () => {
                                 </p>
                             )}
                         </div>
-
+                        
                         <div className="portfolio-items-grid">
                             {portfolio?.PortfolioItems?.length > 0 ? (
                                 portfolio.PortfolioItems.map((item) => (
@@ -378,6 +411,11 @@ const Extra = () => {
                                     ))}
                                 </select>
                             </div>
+                            {itemType === 'PROJECT' && (
+                                <button type="button" className="btn btn-outline btn-sm" onClick={handleOpenRepoPicker}>
+                                    Import from GitHub
+                                </button>
+                            )}
                             <div className="input-group">
                                 <label>Title</label>
                                 <input
@@ -403,6 +441,39 @@ const Extra = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {showRepoPicker && (
+                <div className="modal-overlay" onClick={() => setShowRepoPicker(false)}>
+                    <div className="modal modal--wide" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Import from GitHub</h3>
+                            <button className="modal-close-btn" onClick={() => setShowRepoPicker(false)}>✕</button>
+                        </div>
+                        {loadingRepos ? (
+                            <p className="profile-field__value profile-field__value--muted">Loading repositories...</p>
+                        ) : repoError ? (
+                            <p className="github-error">{repoError}</p>
+                        ) : githubRepos.length === 0 ? (
+                            <p className="empty-state">No repositories found on this GitHub account.</p>
+                        ) : (
+                            <div className="github-repo-list">
+                                {githubRepos.map((repo) => (
+                                    <div
+                                        key={repo.id}
+                                        className="github-repo-item github-repo-item--pickable"
+                                        onClick={() => handlePickRepo(repo)}
+                                    >
+                                        <span className="github-repo-item__name">{repo.full_name}</span>
+                                        {repo.description && (
+                                            <p className="github-repo-item__desc">{repo.description}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

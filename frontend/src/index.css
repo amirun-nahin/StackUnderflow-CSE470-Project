@@ -2184,6 +2184,13 @@ textarea {
   border-radius: var(--radius-sm);
   padding: var(--space-3);
 }
+.github-repo-item--pickable {
+  cursor: pointer;
+}
+.github-repo-item--pickable:hover {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent-tint);
+}
 .github-repo-item__name {
   font-family: var(--font-mono);
   font-weight: 600;
@@ -3149,7 +3156,7 @@ a.post-card {
 }
 
 .portfolio-headline-panel {
-  margin-bottom: 0;
+  margin-bottom: 15px;
 }
 .portfolio-headline-text {
   font-size: var(--text-md);

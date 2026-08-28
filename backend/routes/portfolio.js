@@ -3,7 +3,6 @@ const router = express.Router();
 const PDFDocument = require('pdfkit');
 const Portfolio = require('../models/Portfolio');
 const PortfolioItem = require('../models/PortfolioItem');
-const Post = require('../models/Post');
 const BountyEnrollment = require('../models/BountyEnrollment');
 const User = require('../models/User');
 const { validateToken } = require('../middlewares/AuthMiddleware');
@@ -139,13 +138,11 @@ router.get('/:username/pdf', async (req, res) => {
             ? await PortfolioItem.findAll({ where: { PortfolioId: portfolio.id }, order: [['order', 'ASC']] })
             : [];
 
-        const [postCount, completedBounties, followerCount] = await Promise.all([
-            Post.count({ where: { UserId: user.id } }),
-            BountyEnrollment.count({ where: { UserId: user.id, status: 'COMPLETED' } }),
-            user.countFollowers()
-        ]);
+        const completedBounties = await BountyEnrollment.count({
+            where: { UserId: user.id, status: 'COMPLETED' }
+        });
 
-        const stats = { points: user.points || 0, posts: postCount, bounties: completedBounties, followers: followerCount };
+        const stats = { points: user.points || 0, bounties: completedBounties };
         const techStack = Array.isArray(user.tech_stack) ? user.tech_stack : [];
 
         res.setHeader('Content-Type', 'application/pdf');
@@ -195,6 +192,15 @@ function sectionItems(doc, items) {
     });
 }
 
+// "I have gained 120 pts" / "Completed 3 bounties" — one line each, drawn
+// with the current font settings at the caller's site.
+function statsSentences(stats) {
+    return [
+        `Completed ${stats.bounties} ${stats.bounties === 1 ? 'bounty' : 'bounties'}.`,
+        `Gained ${stats.points} pts.`
+    ];
+}
+
 function renderMinimal(doc, { user, headline, techStack, stats, items }) {
     doc.fontSize(24).font('Helvetica-Bold').text(user.name || user.username);
     doc.fontSize(12).font('Helvetica').fillColor('#555555').text(user.current_role || 'Developer');
@@ -218,9 +224,8 @@ function renderMinimal(doc, { user, headline, techStack, stats, items }) {
         doc.moveDown(0.5);
     }
 
-    doc.fontSize(10).font('Helvetica').fillColor('#555555').text(
-        `${stats.points} pts   ·   ${stats.posts} posts   ·   ${stats.bounties} bounties completed   ·   ${stats.followers} followers`
-    );
+    doc.fontSize(10).font('Helvetica').fillColor('#555555');
+    statsSentences(stats).forEach((line) => doc.text(line));
     doc.fillColor('#000000');
 
     sectionItems(doc, items);
@@ -251,9 +256,8 @@ function renderModern(doc, { user, headline, techStack, stats, items }) {
     }
 
     doc.fontSize(10).font('Helvetica-Bold').fillColor('#0d9488').text('STATS');
-    doc.fillColor('#000000').font('Helvetica').fontSize(10).text(
-        `${stats.points} pts   ·   ${stats.posts} posts   ·   ${stats.bounties} bounties completed   ·   ${stats.followers} followers`
-    );
+    doc.fillColor('#000000').font('Helvetica').fontSize(10);
+    statsSentences(stats).forEach((line) => doc.text(line));
 
     sectionItems(doc, items);
 }
@@ -279,10 +283,8 @@ function renderClassic(doc, { user, headline, techStack, stats, items }) {
         doc.moveDown(0.5);
     }
 
-    doc.fontSize(10).text(
-        `${stats.points} pts   |   ${stats.posts} posts   |   ${stats.bounties} bounties completed   |   ${stats.followers} followers`,
-        { align: 'center' }
-    );
+    doc.fontSize(10);
+    statsSentences(stats).forEach((line) => doc.text(line, { align: 'center' }));
 
     sectionItems(doc, items);
 }
