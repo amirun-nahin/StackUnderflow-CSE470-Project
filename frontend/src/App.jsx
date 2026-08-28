@@ -25,6 +25,7 @@ import DuelDetail from "./pages/DuelDetail";
 import NotificationBell from "./components/NotificationBell";
 import SearchBar from "./components/SearchBar";
 import Milestones from "./pages/Milestones";
+import Extra from "./pages/Extra";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("accessToken");
@@ -98,6 +99,13 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
               className={`navbar__tab ${activeFeed === "challenges" ? "navbar__tab--active" : ""}`}
             >                                                              
               Competition                                             
+            </Link>
+            <Link
+              to="/extra"
+              onClick={() => setActiveFeed("extra")}
+              className={`navbar__tab ${activeFeed === "extra" ? "navbar__tab--active" : ""}`}
+            >
+              Extra
             </Link>
           </div>
         )}
@@ -260,6 +268,14 @@ function App() {
           element={
             <ProtectedRoute>
               <DuelDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/extra"
+          element={
+            <ProtectedRoute>
+              <Extra />
             </ProtectedRoute>
           }
         />        

@@ -13,6 +13,10 @@ const Comment = sequelize.define('Comment', {
     is_deleted: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
+    },
+    is_best_answer: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     }
 });
 

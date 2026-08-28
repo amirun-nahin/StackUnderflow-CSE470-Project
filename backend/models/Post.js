@@ -53,6 +53,13 @@ const Post = sequelize.define('Post', {
         // a group.
         type: DataTypes.INTEGER,
         allowNull: true,
+    },
+    DuplicateOfPostId: {
+        // Set when a community member has flagged this post as a duplicate
+        // of another. Self-referential — see the Post.belongsTo(Post, ...)
+        // association in index.js.
+        type: DataTypes.INTEGER,
+        allowNull: true,
     }
 });
 

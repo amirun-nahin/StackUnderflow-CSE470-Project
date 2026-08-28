@@ -24,6 +24,8 @@ const RepoRequestJoin = require('./models/RepoRequestJoin');
 const Meeting = require('./models/Meeting');
 const Announcement = require('./models/Announcement');
 const CodeComment = require('./models/CodeComment');
+const Portfolio = require('./models/Portfolio');
+const PortfolioItem = require('./models/PortfolioItem');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -65,6 +67,12 @@ app.use('/api/jobs', jobRoutes);
 
 const milestonesRoutes = require('./routes/milestones');
 app.use('/api/milestones', milestonesRoutes);
+
+const portfolioRoutes = require('./routes/portfolio');
+app.use('/api/portfolio', portfolioRoutes);
+
+const aiAssistantRoutes = require('./routes/aiAssistant');
+app.use('/api/ai-assistant', aiAssistantRoutes);
 
 const duelRoutes = require('./routes/duel');
 app.use('/api/duel', duelRoutes);
@@ -202,11 +210,20 @@ Announcement.belongsTo(User);
 Post.belongsTo(Group, { as: 'RepoGroup', foreignKey: 'RepoGroupId' });
 Group.hasOne(Post, { as: 'RepoRequestPost', foreignKey: 'RepoGroupId' });
 
+// Q&A Moderation: a post can be flagged as a duplicate of another post
+Post.belongsTo(Post, { as: 'DuplicateOf', foreignKey: 'DuplicateOfPostId' });
+
 // Peer Review: inline line-level code comments on a post's code snippet
 Post.hasMany(CodeComment);
 CodeComment.belongsTo(Post);
 User.hasMany(CodeComment);
 CodeComment.belongsTo(User);
+
+// Auto-Generated Portfolio
+User.hasOne(Portfolio);
+Portfolio.belongsTo(User);
+Portfolio.hasMany(PortfolioItem);
+PortfolioItem.belongsTo(Portfolio);
 
 
 // Database Sync and Server Start

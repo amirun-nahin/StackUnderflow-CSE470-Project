@@ -12,6 +12,14 @@ const PostDetail = () => {
     const [newCommentCode, setNewCommentCode] = useState('');
     const [showCommentCode, setShowCommentCode] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+    const [duplicateOfId, setDuplicateOfId] = useState('');
+    const [flaggingDuplicate, setFlaggingDuplicate] = useState(false);
+    const [duplicateError, setDuplicateError] = useState('');
+
+    const [suggesting, setSuggesting] = useState(false);
+    const [suggestion, setSuggestion] = useState(null);
+    const [suggestError, setSuggestError] = useState('');
 
     const token = localStorage.getItem('accessToken');
     // WE GRAB BOTH THE ID AND USERNAME NOW
@@ -172,15 +180,123 @@ const PostDetail = () => {
             console.error("Failed to delete comment", error);
         }
     };
+    // Q&A Moderation: toggle a comment as the post's best answer
+    const handleMarkBestAnswer = async (commentId) => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/posts/${id}/comment/${commentId}/best-answer`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const { comment: updated } = await response.json();
+                const currentComments = post.Comments || [];
+                const newFlatList = currentComments.map((c) => {
+                    if (c.id === updated.id) return { ...c, is_best_answer: updated.is_best_answer };
+                    // Marking a new best answer unmarks any previous one on this post
+                    if (updated.is_best_answer && c.is_best_answer) return { ...c, is_best_answer: false };
+                    return c;
+                });
+                setPost({ ...post, Comments: newFlatList });
+                setCommentTree(buildTree(newFlatList));
+            }
+        } catch (error) {
+            console.error("Failed to mark best answer", error);
+        }
+    };
+
+    // Q&A Moderation: ask AI to suggest which answer is best (doesn't mark it)
+    const handleSuggestBestAnswer = async () => {
+        setSuggesting(true);
+        setSuggestError('');
+        setSuggestion(null);
+        try {
+            const response = await fetch(`http://localhost:3001/api/posts/${id}/suggest-best-answer`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setSuggestion(data);
+            } else {
+                setSuggestError(data.error || 'Failed to get a suggestion.');
+            }
+        } catch (error) {
+            console.error("Failed to get suggestion", error);
+            setSuggestError('Could not connect to the server.');
+        } finally {
+            setSuggesting(false);
+        }
+    };
+
+    // Q&A Moderation: flag / dismiss this post as a duplicate
+    const handleFlagDuplicate = async (e) => {
+        e.preventDefault();
+        if (!duplicateOfId.trim()) return;
+
+        setFlaggingDuplicate(true);
+        setDuplicateError('');
+        try {
+            const response = await fetch(`http://localhost:3001/api/posts/${id}/flag-duplicate`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ duplicate_of_post_id: duplicateOfId.trim() })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setPost((prev) => ({ ...prev, DuplicateOfPostId: data.DuplicateOfPostId }));
+                setShowDuplicateModal(false);
+                setDuplicateOfId('');
+            } else {
+                setDuplicateError(data.error || 'Failed to flag as duplicate.');
+            }
+        } catch (error) {
+            console.error("Failed to flag duplicate", error);
+            setDuplicateError('Could not connect to the server.');
+        } finally {
+            setFlaggingDuplicate(false);
+        }
+    };
+
+    const handleDismissDuplicateFlag = async () => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/posts/${id}/flag-duplicate`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                setPost((prev) => ({ ...prev, DuplicateOfPostId: null }));
+            }
+        } catch (error) {
+            console.error("Failed to dismiss duplicate flag", error);
+        }
+    };
 
     if (loading) return <div className="loading-state">Loading...</div>;
     if (!post) return null;
+
+    const isPostAuthor = post.UserId === myUserId;
+    const topLevelAnswerCount = commentTree.filter((c) => !c.is_deleted).length;
 
     return (
         <div className="page-container">
             <button onClick={() => navigate(-1)} className="btn-ghost back-link">
                 &larr; Back to Feed
             </button>
+            
+            {post.DuplicateOfPostId && (
+                <div className="duplicate-banner panel">
+                    <span>
+                        ⚠️ This post was flagged as a possible duplicate of{' '}
+                        <Link to={`/post/${post.DuplicateOfPostId}`}>post #{post.DuplicateOfPostId}</Link>.
+                    </span>
+                    {isPostAuthor && (
+                        <button className="btn-ghost btn-sm" onClick={handleDismissDuplicateFlag}>
+                            Dismiss
+                        </button>
+                    )}
+                </div>
+            )}
+
 
             <PostCard
                 post={post}
@@ -212,7 +328,37 @@ const PostDetail = () => {
             )}
 
             <div className="comments-section panel">
-                <h3>Discussion</h3>
+                <div className="comments-section__header">
+                    <h3>Discussion</h3>
+                    <button className="btn-ghost btn-sm" onClick={() => setShowDuplicateModal(true)}>
+                        🚩 Flag as Duplicate
+                    </button>
+                </div>
+
+                {isPostAuthor && topLevelAnswerCount > 0 && (
+                    <div className="best-answer-suggestion">
+                        <button className="btn btn-outline btn-sm" onClick={handleSuggestBestAnswer} disabled={suggesting}>
+                            {suggesting ? 'Thinking...' : '🤖 Suggest Best Answer'}
+                        </button>
+                        {suggestError && <p className="error-text">{suggestError}</p>}
+                        {suggestion && (
+                            <div className="best-answer-suggestion__result">
+                                <p>
+                                    AI suggests <strong>{suggestion.suggested_username}</strong>'s answer — {suggestion.reason}
+                                </p>
+                                <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() => {
+                                        handleMarkBestAnswer(suggestion.suggested_comment_id);
+                                        setSuggestion(null);
+                                    }}
+                                >
+                                    Mark as Best Answer
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <form onSubmit={handleAddComment} className="comment-form-row comment-form-row--stacked">
                     <textarea
@@ -250,6 +396,8 @@ const PostDetail = () => {
                                 handleAddReply={handleAddReply}
                                 handleDeleteComment={handleDeleteComment} // Passed down
                                 myUserId={myUserId}                       // Passed down
+                                isPostAuthor={isPostAuthor}
+                                handleMarkBestAnswer={handleMarkBestAnswer}
                             />
                         ))}
                     </div>
@@ -257,6 +405,38 @@ const PostDetail = () => {
                     <p className="empty-state">No comments yet. Be the first!</p>
                 )}
             </div>
+
+            {showDuplicateModal && (
+                <div className="modal-overlay" onClick={() => setShowDuplicateModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Flag as Duplicate</h3>
+                            <button className="modal-close-btn" onClick={() => setShowDuplicateModal(false)}>✕</button>
+                        </div>
+                        <form onSubmit={handleFlagDuplicate} className="profile-edit-form">
+                            <div className="input-group">
+                                <label>Original Post ID</label>
+                                <input
+                                    type="number"
+                                    value={duplicateOfId}
+                                    onChange={(e) => setDuplicateOfId(e.target.value)}
+                                    placeholder="e.g. 42"
+                                    required
+                                />
+                                <p className="empty-state" style={{ marginTop: 'var(--space-2)' }}>
+                                    Find this in the original post's URL — e.g. /post/<strong>42</strong>
+                                </p>
+                            </div>
+                            {duplicateError && <p className="error-text">{duplicateError}</p>}
+                            <div className="profile-edit-actions">
+                                <button type="submit" className="btn btn-primary" disabled={flaggingDuplicate}>
+                                    {flaggingDuplicate ? 'Flagging...' : 'Flag as Duplicate'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
