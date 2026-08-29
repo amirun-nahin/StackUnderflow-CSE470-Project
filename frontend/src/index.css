@@ -325,6 +325,157 @@ textarea {
   }
 }
 
+/* Duel board — same two-column idea as .home-layout's sidebars: in-progress
+   stuff (invites, active duels) on the left, History on the right. */
+.duel-board__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+.duel-board__col-left,
+.duel-board__col-right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+@media (max-width: 720px) {
+  .duel-board__columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Profile page layout — main content + a right-hand sidebar for Elo/Badges,
+   same sticky-sidebar pattern as .home-layout.
+   ------------------------------------------------------------------------- */
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--space-5);
+  max-width: 1200px;
+  margin: var(--space-6) auto;
+  padding: 0 var(--space-5) var(--space-8);
+  align-items: start;
+}
+.profile-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.profile-side {
+  position: sticky;
+  top: calc(64px + var(--space-5));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+@media (max-width: 960px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+  .profile-side {
+    position: static;
+  }
+}
+
+/* Elo card */
+.elo-card__value {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl, 2rem);
+  font-weight: 700;
+  color: var(--color-ink);
+  text-align: center;
+  margin: var(--space-2) 0;
+}
+.elo-card__caption {
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+  margin-bottom: var(--space-2);
+}
+.elo-card__sources {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+}
+.elo-card__sources li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+.elo-card__source-icon {
+  font-size: var(--text-md, 1rem);
+}
+
+/* Badges card */
+.badges-card__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.badges-card__slot {
+  aspect-ratio: 1;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-2xl, 2rem);
+}
+.badges-card__slot--filled {
+  border-style: solid;
+  background-color: var(--color-surface-alt, var(--color-surface));
+}
+.badges-card__edit-btn {
+  width: 100%;
+}
+.badges-card__picker-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.badges-card__picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.badges-card__picker-item--selected {
+  border-color: var(--color-accent, var(--color-ink));
+  background-color: var(--color-surface-alt, var(--color-surface));
+}
+.badges-card__picker-icon {
+  font-size: var(--text-2xl, 2rem);
+}
+.badges-card__picker-name {
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+.badges-card__picker-desc {
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+}
+
+
+
 /* -------------------------------------------------------------------------
    5. Panel (generic surface card — replaces the old blurred glass panel)
    ------------------------------------------------------------------------- */
@@ -654,6 +805,14 @@ textarea {
 }
 .post-card--clickable:hover {
   box-shadow: var(--shadow-md);
+}
+
+/* 1v1 Duel and Timed Competition cards sit flush against the hub background
+   instead of the usual white .panel fill — everything else (border-left
+   color gutter, padding, hover shadow) stays the same. */
+.duel-board .post-card,
+.competition-board .post-card {
+  background-color: transparent;
 }
 
 .post-card--normal {
