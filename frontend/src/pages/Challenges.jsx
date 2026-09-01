@@ -33,7 +33,7 @@ const Challenges = () => {
                     ))}
                 </div>
 
-                <div className="panel challenges-tab-content" style={{ marginTop: '1.5rem' }}>
+                <div className="feed challenges-tab-content" style={{ marginTop: '1.5rem' }}>
                     {activeTab === 'bounty' && <BountyBoard />}
                     {activeTab === 'duel' && <DuelBoard />}
                     {activeTab === 'competition' && <CompetitionBoard />}
