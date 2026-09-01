@@ -71,7 +71,7 @@ app.use('/api/milestones', milestonesRoutes);
 const portfolioRoutes = require('./routes/portfolio');
 app.use('/api/portfolio', portfolioRoutes);
 
-const aiAssistantRoutes = require('./routes/aiAssistant');
+const aiAssistantRoutes = require('./routes/Aiassistant');
 app.use('/api/ai-assistant', aiAssistantRoutes);
 
 const duelRoutes = require('./routes/duel');
