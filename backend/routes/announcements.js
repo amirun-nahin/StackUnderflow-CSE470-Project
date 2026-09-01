@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Announcement = require('../models/Announcement');
+const Group = require('../models/Group');
+const Notification = require('../models/Notification');
 const GroupMember = require('../models/GroupMember');
 const User = require('../models/User');
 const { validateToken } = require('../middlewares/AuthMiddleware');
@@ -59,6 +61,26 @@ router.post('/:groupId/announcements', validateToken, async (req, res) => {
         const announcementWithUser = await Announcement.findByPk(announcement.id, {
             include: [{ model: User, attributes: ['id', 'username', 'profile_picture'] }]
         });
+        // Notify every other approved member — skip the poster themselves
+        const group = await Group.findByPk(req.params.groupId);
+        const otherMembers = await GroupMember.findAll({
+            where: { GroupId: req.params.groupId, status: 'APPROVED' }
+        });
+        const recipientIds = otherMembers
+            .map(m => m.UserId)
+            .filter(id => id !== req.user.id);
+
+        if (recipientIds.length > 0) {
+            await Notification.bulkCreate(
+                recipientIds.map(id => ({
+                    type: 'NEW_ANNOUNCEMENT',
+                    message: `${announcementWithUser.User.username} posted an announcement in "${group.name}".`,
+                    link: `/group/${req.params.groupId}`,
+                    UserId: id
+                }))
+            );
+        }
+        
 
         res.status(201).json(announcementWithUser);
     } catch (error) {

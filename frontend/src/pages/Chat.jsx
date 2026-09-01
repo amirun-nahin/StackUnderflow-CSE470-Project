@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 
 const Chat = () => {
   const location = useLocation();
-
+  const [searchParams] = useSearchParams();
   // New State Management
   const [conversations, setConversations] = useState([]);
   const [followers, setFollowers] = useState([]);
@@ -41,6 +41,17 @@ const Chat = () => {
 
     return () => clearInterval(interval);
   }, [token, activeUser]);
+  // Support deep-linking into a specific conversation via ?userId=, used by
+  // notification links (a plain URL string can't carry router state like
+  // location.state.openUser does when navigating from within the app).
+  useEffect(() => {
+    const targetUserId = searchParams.get("userId");
+    if (!targetUserId) return;
+    if (activeUser && String(activeUser.id) === targetUserId) return;
+
+    const match = conversations.find((u) => String(u.id) === targetUserId);
+    if (match) setActiveUser(match);
+  }, [searchParams, conversations, activeUser]);
 
   // Fetch Followers (Triggered by the New Chat button)
   const handleOpenNewChat = async () => {
