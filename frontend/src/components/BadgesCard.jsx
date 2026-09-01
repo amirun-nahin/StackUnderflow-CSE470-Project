@@ -15,7 +15,7 @@ const BadgesCard = ({ username, isMyProfile }) => {
 
     const fetchBadges = async () => {
         try {
-            const response = await fetch(`http://localhost:3001/api/badges/${username}`);
+            const response = await fetch(`http://localhost:3001/api/badges/${username}`, { cache: 'no-store' });
             if (response.ok) {
                 const data = await response.json();
                 setEarned(data.earned || []);

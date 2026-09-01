@@ -98,6 +98,9 @@ app.use('/api/groups', meetingRoutes);
 const announcementRoutes = require('./routes/announcements');
 app.use('/api/groups', announcementRoutes);
 
+const badgesRoutes = require('./routes/badges');
+app.use('/api/badges', badgesRoutes);
+
 // Fallback Route
 app.get('/', (req, res) => {
     res.send("StackUnderflow API is running!");

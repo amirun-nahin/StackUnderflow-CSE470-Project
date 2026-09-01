@@ -125,7 +125,7 @@ router.get('/:username', async (req, res) => {
         const pinned = pinnedIds
             .filter(id => earnedIds.has(id))
             .map(id => earned.find(b => b.id === id));
-
+        res.set('Cache-Control', 'no-store');
         res.json({ earned, pinned });
     } catch (error) {
         console.error('Error fetching badges:', error);
@@ -158,6 +158,10 @@ router.put('/pin', validateToken, async (req, res) => {
         }
 
         user.pinned_badge_ids = badge_ids;
+        // Defensive: Sequelize's change-tracking for JSON columns can be
+        // unreliable across dialect/version combos — force it dirty so
+        // the UPDATE definitely includes this column no matter what.
+        user.changed('pinned_badge_ids', true);
         await user.save();
 
         res.json({ pinned_badge_ids: user.pinned_badge_ids });
