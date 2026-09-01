@@ -3,7 +3,9 @@ import { useLocation, useSearchParams } from "react-router-dom";
 
 const Chat = () => {
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const consumedDeepLinkRef = useRef(null);
+
   // New State Management
   const [conversations, setConversations] = useState([]);
   const [followers, setFollowers] = useState([]);
@@ -41,17 +43,28 @@ const Chat = () => {
 
     return () => clearInterval(interval);
   }, [token, activeUser]);
+
   // Support deep-linking into a specific conversation via ?userId=, used by
   // notification links (a plain URL string can't carry router state like
   // location.state.openUser does when navigating from within the app).
+  // This must only apply ONCE per link — otherwise, since the query param
+  // stays in the URL, this effect would keep re-firing on every activeUser
+  // change and snap the user back to the notification's conversation every
+  // time they tried to click on someone else.
   useEffect(() => {
     const targetUserId = searchParams.get("userId");
     if (!targetUserId) return;
-    if (activeUser && String(activeUser.id) === targetUserId) return;
+    if (consumedDeepLinkRef.current === targetUserId) return;
 
     const match = conversations.find((u) => String(u.id) === targetUserId);
-    if (match) setActiveUser(match);
-  }, [searchParams, conversations, activeUser]);
+    if (match) {
+      setActiveUser(match);
+      consumedDeepLinkRef.current = targetUserId;
+      // Strip the query param now that it's been applied, so it no longer
+      // takes effect on future re-renders (e.g. when switching chats).
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, conversations, setSearchParams]);
 
   // Fetch Followers (Triggered by the New Chat button)
   const handleOpenNewChat = async () => {
