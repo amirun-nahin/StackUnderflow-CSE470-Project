@@ -38,7 +38,13 @@ const Competition = sequelize.define('Competition', {
         type: DataTypes.ENUM('MANUAL', 'AUTO'),
         allowNull: false,
         defaultValue: 'MANUAL'
+    },
+    elo_awarded: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
     }
+
 });
 
 module.exports = Competition;

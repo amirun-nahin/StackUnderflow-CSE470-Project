@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import PostCard from '../components/PostCard';
 import GitHubConnect from '../components/GitHubConnect';
+import EloCard from '../components/EloCard';
+import BadgesCard from '../components/BadgesCard';
 
 const parseTechStack = (tech) => {
     if (!tech) return [];
@@ -186,7 +188,8 @@ const Profile = () => {
     };
 
     return (
-        <div className="page-container">
+        <div className="profile-layout">
+            <div className="profile-main">
 
             <div className="profile-header panel">
 
@@ -439,6 +442,12 @@ const Profile = () => {
                 )}
             </div>
 
+            </div>
+
+            <aside className="profile-side">
+                <EloCard elo={profile.elo} />
+                <BadgesCard username={profile.username} isMyProfile={isMyProfile} />
+            </aside>
         </div>
     );
 };

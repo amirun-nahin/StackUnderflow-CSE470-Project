@@ -98,6 +98,9 @@ app.use('/api/groups', meetingRoutes);
 const announcementRoutes = require('./routes/announcements');
 app.use('/api/groups', announcementRoutes);
 
+const badgesRoutes = require('./routes/badges');
+app.use('/api/badges', badgesRoutes);
+
 // Fallback Route
 app.get('/', (req, res) => {
     res.send("StackUnderflow API is running!");
@@ -232,7 +235,11 @@ sequelize.sync().then(() => { //sequelize.sync({ alter: true }).then(() => {
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
     });
+
+    const { sweepExpiredDuels } = require('./routes/duel');
+    setInterval(() => {
+        sweepExpiredDuels().catch(err => console.error('Duel sweep error:', err));
+    }, 30000);
 }).catch((error) => {
     console.error('Unable to connect to the database:', error);
 });
-

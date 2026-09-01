@@ -91,6 +91,16 @@ const User = sequelize.define('User', {
         allowNull: false,
         defaultValue: 0
     },
+    elo: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 1000
+    },
+    pinned_badge_ids: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: []
+    },
     github_username: {
         type: DataTypes.STRING,
         allowNull: true,

@@ -289,6 +289,25 @@ async function finalizeDuel(duel) {
         winnerId = challengerTotal > opponentTotal ? duel.ChallengerId : duel.OpponentId;
     } // else: a tie stays a draw (winnerId null)
 
+    // Standard chess-style Elo update — duels are genuinely 1v1, so unlike
+    // bounty/competition Elo bonuses (flat amounts), this is real pairwise
+    // Elo: K=32, expected score from the logistic curve, actual score is
+    // 1/0.5/0 for win/draw/loss.
+    const challenger = await User.findByPk(duel.ChallengerId);
+    const opponent = await User.findByPk(duel.OpponentId);
+    if (challenger && opponent) {
+        const K = 32;
+        const expectedChallenger = 1 / (1 + Math.pow(10, (opponent.elo - challenger.elo) / 400));
+        const expectedOpponent = 1 - expectedChallenger;
+        const scoreChallenger = winnerId === null ? 0.5 : (winnerId === duel.ChallengerId ? 1 : 0);
+        const scoreOpponent = 1 - scoreChallenger;
+
+        challenger.elo = Math.round(challenger.elo + K * (scoreChallenger - expectedChallenger));
+        opponent.elo = Math.round(opponent.elo + K * (scoreOpponent - expectedOpponent));
+        await challenger.save();
+        await opponent.save();
+    }
+
     duel.status = 'COMPLETED';
     duel.WinnerId = winnerId;
     await duel.save();
@@ -628,6 +647,16 @@ router.post('/:duelId/answer', validateToken, async (req, res) => {
         const answeredCount = await DuelSubmission.count({ where: { DuelQuestionId: duelQuestion.id } });
         if (answeredCount === 2) {
             await recomputePoints(duelQuestion.id);
+
+            // If this was the LAST question and both sides just answered it,
+            // the duel is functionally over — finalize (and apply Elo) right
+            // now instead of waiting for a client to poll /state after the
+            // full scheduled duration elapses. This is what makes Elo
+            // actually update promptly instead of depending on someone
+            // revisiting the duel page later.
+            if (duelQuestion.order_index === duel.question_count - 1) {
+                await finalizeDuel(duel);
+            }
         }
 
         res.status(201).json({ submitted: true, is_correct: isCorrect });
@@ -637,5 +666,28 @@ router.post('/:duelId/answer', validateToken, async (req, res) => {
     }
 });
 
-module.exports = router;
+// ---------------------------------------------------------------
+// Safety net for abandoned duels: if one player never submits the
+// final answer, the fast-path finalize above never fires. This finds
+// any ACTIVE duel whose full scheduled duration has already elapsed
+// in real time and finalizes it anyway (applying Elo either way).
+// Called periodically from index.js — safe to call as often as you like.
+// ---------------------------------------------------------------
+async function sweepExpiredDuels() {
+    const activeDuels = await Duel.findAll({
+        where: { status: 'ACTIVE' },
+        include: [{ model: DuelQuestion }]
+    });
 
+    for (const duel of activeDuels) {
+        const totalDurationMs = duel.DuelQuestions.reduce((sum, q) => sum + q.duration_seconds * 1000, 0);
+        if (totalDurationMs === 0) continue; // questions not assigned yet, shouldn't happen for ACTIVE
+        const elapsedMs = Date.now() - new Date(duel.started_at).getTime();
+        if (elapsedMs >= totalDurationMs) {
+            await finalizeDuel(duel);
+        }
+    }
+}
+
+module.exports = router;
+module.exports.sweepExpiredDuels = sweepExpiredDuels;
