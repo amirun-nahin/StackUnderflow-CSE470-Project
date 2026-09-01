@@ -5,6 +5,7 @@ import {
   Route,
   Link,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -35,7 +36,28 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-const NavigationBar = ({ activeFeed, setActiveFeed }) => {
+// Maps a URL path to the navbar tab it corresponds to, so the highlighted
+// tab always matches the actual page — including on refresh, back/forward,
+// or any navigation that isn't a direct click on a tab (e.g. a username
+// link elsewhere in the app taking you to your own profile).
+// "/" is ambiguous between Global and Following (both live at "/"), so
+// that distinction is left to the tabs' own onClick handlers below.
+const PATH_PREFIX_TO_FEED = [
+  ["/discover", "discover"],
+  ["/groups", "groups"],
+  ["/group/", "groups"],
+  ["/chat", "chat"],
+  ["/challenges", "challenges"],
+  ["/extra", "extra"],
+];
+
+function deriveActiveFeed(pathname, myUsername) {
+  if (myUsername && pathname.startsWith(`/profile/${myUsername}`)) return "profile";
+  const match = PATH_PREFIX_TO_FEED.find(([prefix]) => pathname.startsWith(prefix));
+  return match ? match[1] : null;
+}
+
+const NavigationBar = ({ activeFeed, setHomeSubFeed }) => {
   const token = localStorage.getItem("accessToken");
   const myUsername = localStorage.getItem("username");
 
@@ -51,7 +73,7 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
         <Link
           to="/"
           className="navbar__brand"
-          onClick={() => setActiveFeed("global")}
+          onClick={() => setHomeSubFeed("global")}
         >
           stackUnderflow
         </Link>
@@ -60,49 +82,44 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
           <div className="navbar__tabs">
             <Link
               to="/"
-              onClick={() => setActiveFeed("global")}
+              onClick={() => setHomeSubFeed("global")}
               className={`navbar__tab ${activeFeed === "global" ? "navbar__tab--active" : ""}`}
             >
               Global
             </Link>
             <Link
               to="/"
-              onClick={() => setActiveFeed("following")}
+              onClick={() => setHomeSubFeed("following")}
               className={`navbar__tab ${activeFeed === "following" ? "navbar__tab--active" : ""}`}
             >
               Following
             </Link>
             <Link
               to="/discover"
-              onClick={() => setActiveFeed("discover")}
               className={`navbar__tab ${activeFeed === "discover" ? "navbar__tab--active" : ""}`}
             >
               Discover
             </Link>
             <Link
               to="/groups"
-              onClick={() => setActiveFeed("groups")}
               className={`navbar__tab ${activeFeed === "groups" ? "navbar__tab--active" : ""}`}
             >
               Groups
             </Link>
             <Link
               to="/chat"
-              onClick={() => setActiveFeed("chat")}
               className={`navbar__tab ${activeFeed === "chat" ? "navbar__tab--active" : ""}`}
             >
               Messages
             </Link>
             <Link                                                          
               to="/challenges"                                             
-              onClick={() => setActiveFeed("challenges")}                  
               className={`navbar__tab ${activeFeed === "challenges" ? "navbar__tab--active" : ""}`}
             >                                                              
               Competition                                             
             </Link>
             <Link
               to="/extra"
-              onClick={() => setActiveFeed("extra")}
               className={`navbar__tab ${activeFeed === "extra" ? "navbar__tab--active" : ""}`}
             >
               Extra
@@ -118,7 +135,6 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
             <Link
               to={`/profile/${myUsername}`}
               className={`navbar__profile-link ${activeFeed === "profile" ? "navbar__profile-link--active" : ""}`}
-              onClick={() => setActiveFeed("profile")}
             >
               Profile
             </Link>
@@ -141,12 +157,23 @@ const NavigationBar = ({ activeFeed, setActiveFeed }) => {
   );
 };
 
-function App() {
-  const [activeFeed, setActiveFeed] = useState("global");
+function AppContent() {
+  const location = useLocation();
+  const myUsername = localStorage.getItem("username");
+
+  // Only Global vs Following needs real state — both live at "/" so the
+  // URL alone can't tell them apart. Every other tab (and Profile) is
+  // derived straight from the current path on every render, so it's
+  // always correct on refresh, back/forward, or any other navigation —
+  // no separate state to fall out of sync with the URL.
+  const [homeSubFeed, setHomeSubFeed] = useState("global");
+  const activeFeed =
+    deriveActiveFeed(location.pathname, myUsername) ??
+    (location.pathname === "/" ? homeSubFeed : null);
 
   return (
-    <Router>
-      <NavigationBar activeFeed={activeFeed} setActiveFeed={setActiveFeed} />
+    <>
+      <NavigationBar activeFeed={activeFeed} setHomeSubFeed={setHomeSubFeed} />
       <SearchBar />
       <Routes>
         <Route
@@ -280,6 +307,14 @@ function App() {
           }
         />        
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
