@@ -99,7 +99,29 @@ const User = sequelize.define('User', {
     pinned_badge_ids: {
         type: DataTypes.JSON,
         allowNull: true,
-        defaultValue: []
+        defaultValue: [],
+        // MariaDB (bundled with XAMPP) implements JSON as an alias for
+        // LONGTEXT rather than a true native JSON type, so the mysql2
+        // driver doesn't always auto-parse it back into a JS array —
+        // it can silently come back as a raw JSON string instead.
+        // This getter/setter pair normalizes both directions so every
+        // caller always sees/writes a real array, regardless of dialect.
+        get() {
+            const raw = this.getDataValue('pinned_badge_ids');
+            if (Array.isArray(raw)) return raw;
+            if (typeof raw === 'string') {
+                try {
+                    const parsed = JSON.parse(raw);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch {
+                    return [];
+                }
+            }
+            return raw || [];
+        },
+        set(value) {
+            this.setDataValue('pinned_badge_ids', Array.isArray(value) ? value : []);
+        }
     },
     github_username: {
         type: DataTypes.STRING,
