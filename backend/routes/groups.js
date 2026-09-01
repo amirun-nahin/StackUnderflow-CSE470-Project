@@ -7,6 +7,7 @@ const Post = require("../models/Post");
 const User = require("../models/User");
 const Comment = require("../models/Comment");
 const Vote = require("../models/Vote");
+const Notification = require("../models/Notification");
 const { validateToken } = require("../middlewares/AuthMiddleware");
 
 // Create a Group (Creator becomes ADMIN)
@@ -302,6 +303,25 @@ router.post("/:groupId/posts", validateToken, async (req, res) => {
     const postWithUser = await Post.findByPk(post.id, {
       include: [{ model: User, attributes: ["username", "profile_picture"] }],
     });
+    // Notify every other approved member — skip the poster themselves
+    const group = await Group.findByPk(groupId);
+    const otherMembers = await GroupMember.findAll({
+      where: { GroupId: groupId, status: "APPROVED" },
+    });
+    const recipientIds = otherMembers
+      .map((m) => m.UserId)
+      .filter((id) => id !== req.user.id);
+
+    if (recipientIds.length > 0) {
+      await Notification.bulkCreate(
+        recipientIds.map((id) => ({
+          type: "NEW_POST_IN_GROUP",
+          message: `${postWithUser.User.username} posted in "${group.name}".`,
+          link: `/group/${groupId}`,
+          UserId: id,
+        }))
+      );
+    }
 
     res.status(201).json(postWithUser);
   } catch (error) {

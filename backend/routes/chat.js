@@ -3,6 +3,7 @@ const router = express.Router();
 const { Op } = require('sequelize');
 const Message = require('../models/Message');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const { validateToken } = require('../middlewares/AuthMiddleware');
 
 // Get Followers + Following (Used only for starting a New chat)
@@ -109,6 +110,15 @@ router.post('/:userId', validateToken, async (req, res) => {
             SenderId: req.user.id,
             ReceiverId: req.params.userId
         });
+
+        const sender = await User.findByPk(req.user.id);
+        await Notification.create({
+            type: 'NEW_MESSAGE',
+            message: `${sender.username} sent you a message.`,
+            link: `/chat?userId=${req.user.id}`,
+            UserId: req.params.userId
+        });
+        
         res.json(message);
     } catch (error) {
         res.status(500).json({ error: 'Failed to send message' });
