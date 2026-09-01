@@ -232,7 +232,11 @@ sequelize.sync().then(() => { //sequelize.sync({ alter: true }).then(() => {
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
     });
+
+    const { sweepExpiredDuels } = require('./routes/duel');
+    setInterval(() => {
+        sweepExpiredDuels().catch(err => console.error('Duel sweep error:', err));
+    }, 30000);
 }).catch((error) => {
     console.error('Unable to connect to the database:', error);
 });
-

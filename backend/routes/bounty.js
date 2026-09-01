@@ -239,6 +239,7 @@ router.put('/submission/:submissionId/review', validateToken, async (req, res) =
         // Credit the solver's profile points
         const solver = await User.findByPk(submission.UserId);
         solver.points += parsedMarks;
+        solver.elo = (solver.elo || 1000) + Math.min(15, Math.round(parsedMarks / 2));
         await solver.save();
 
         // Mark their enrollment as completed
