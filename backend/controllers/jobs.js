@@ -1,10 +1,10 @@
 const User = require('../models/User');
 
-
+// In-Memory Caching
 const jobCache = new Map();
 const CACHE_DURATION = 15 * 60 * 1000;
 
-router.get('/', validateToken, async (req, res) => {
+exports.getJobs = async (req, res) => {
     try {
         const user = await User.findByPk(req.user.id);
         let tag = 'developer';
@@ -24,11 +24,11 @@ router.get('/', validateToken, async (req, res) => {
             // Fetch from Remotive API
             const response = await fetch(`https://remotive.com/api/remote-jobs?search=${tag}`);
             if (!response.ok) throw new Error('External API error');
-            
+
             const data = await response.json();
             // Slice the array to keep the list short
             jobs = data.jobs ? data.jobs.slice(0, 8) : [];
-            
+
             jobCache.set(tag, { data: jobs, timestamp: Date.now() });
         }
 
@@ -45,6 +45,4 @@ router.get('/', validateToken, async (req, res) => {
         console.error('Error fetching jobs:', error);
         res.status(500).json({ error: 'Failed to fetch jobs' });
     }
-});
-
-module.exports = router;
+};
