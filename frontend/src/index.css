@@ -2632,8 +2632,7 @@ a.post-card {
   position: relative;
   background: none;
   border: none;
-  font-size: var(--text-lg);
-  padding: var(--space-2);
+  font-size: var(--text-xl);
   border-radius: var(--radius-full);
   line-height: 1;
 }

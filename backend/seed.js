@@ -15,8 +15,10 @@ const seedDatabase = async () => {
     try {
         console.log("Starting MASSIVE database seeding... This might take a moment.");
 
-        // 1. Wipe the database clean
+        // 1. Wipe the database clean - temporarily disable FK checks
+        await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { raw: true });
         await sequelize.sync({ force: true });
+        await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', { raw: true });
         console.log("All tables dropped and recreated.");
 
         // Hash one password to use for all 50 users (saves processing time)
