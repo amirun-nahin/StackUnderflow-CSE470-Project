@@ -345,7 +345,9 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
-
+.duel-board .posts-container .post-card {
+  background-color: var(--color-surface);
+}
 /* -------------------------------------------------------------------------
    Profile page layout — main content + a right-hand sidebar for Elo/Badges,
    same sticky-sidebar pattern as .home-layout.
@@ -3457,4 +3459,20 @@ a.post-card {
   border: 1px solid var(--color-up);
   border-radius: var(--radius-full);
   padding: 0.15rem 0.55rem;
+}
+/* -------------------------------------------------------------------------
+   27. Competitions Hub (3-column layout, reusing .extra-* from the Extra page)
+   ------------------------------------------------------------------------- */
+.competition-host-cta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.competition-host-cta .section-heading {
+  margin-bottom: var(--space-1);
+}
+.competition-host-cta p {
+  margin-bottom: 0;
 }
