@@ -41,11 +41,7 @@ const CompetitionBoard = () => {
 
     return (
         <div>
-            <div className="hub-header" style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
-                <Link to="/host-competition" className="btn btn-outline btn-sm competition-board__host-btn">
-                    + Host a Competition
-                </Link>
-            </div>
+
 
             {errorMessage && <p className="error-text">{errorMessage}</p>}
             {loading && <p className="empty-state">Loading competitions...</p>}
