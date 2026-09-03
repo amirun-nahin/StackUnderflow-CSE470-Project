@@ -13,7 +13,7 @@ const getMyUserId = (token) => {
     return null;
 };
 
-const DuelBoard = () => {
+const DuelBoard = ({ variant = 'main' }) => {
     const navigate = useNavigate();
     const [duels, setDuels] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -127,6 +127,99 @@ const DuelBoard = () => {
     const activeDuels = duels.filter(d => d.status === 'ACTIVE');
     const history = duels.filter(d => d.status === 'COMPLETED' || d.status === 'DECLINED');
 
+    if (variant === 'sidebar') {
+        const hasAnyPending = invitesReceived.length > 0 || invitesSent.length > 0 || activeDuels.length > 0;
+
+        return (
+            <>
+                {errorMessage && <p className="error-text">{errorMessage}</p>}
+                {statusMessage && <p className="empty-state">{statusMessage}</p>}
+
+                {!hasAnyPending && (
+                    <p className="empty-state">No active, sent, or received duels right now.</p>
+                )}
+
+                {activeDuels.length > 0 && (
+                    <div className="panel">
+                        <h4 className="section-heading">Active Duels</h4>
+                        <div className="post-container">
+                            {activeDuels.map(duel => (
+                                <Link key={duel.id} to={`/duel/${duel.id}`} className="panel post-card post-card--collab post-card--clickable">
+                                    <div className="post-header">
+                                        <div className="post-header__identity">
+                                            <div className="avatar-circle avatar-circle--sm">🧑‍💻</div>
+                                            <span className="post-author">
+                                                {duel.Challenger?.username} vs {duel.Opponent?.username}
+                                            </span>
+                                        </div>
+                                        <div className="post-header__badges">
+                                            <span className="lang-chip">{duel.language}</span>
+                                            <span className="category-chip category-chip--active">ACTIVE</span>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {invitesReceived.length > 0 && (
+                    <div className="panel">
+                        <h4 className="section-heading">Received</h4>
+                        <div className="posts-container">
+                            {invitesReceived.map(duel => (
+                                <div key={duel.id} className="panel post-card post-card--collab">
+                                    <div className="post-header">
+                                        <div className="post-header__identity">
+                                            <div className="avatar-circle avatar-circle--sm">🧑‍💻</div>
+                                            <span className="post-author">{duel.Challenger?.username} challenged you</span>
+                                        </div>
+                                        <div className="post-header__badges">
+                                            <span className="lang-chip">{duel.language}</span>
+                                        </div>
+                                    </div>
+                                    <div className="post-footer card-actions-row">
+                                        <button
+                                            className="btn btn-primary btn-sm"
+                                            disabled={respondingId === duel.id}
+                                            onClick={() => handleRespond(duel.id, true)}
+                                        >
+                                            Accept
+                                        </button>
+                                        <button
+                                            className="btn btn-outline btn-sm"
+                                            disabled={respondingId === duel.id}
+                                            onClick={() => handleRespond(duel.id, false)}
+                                        >
+                                            Decline
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {invitesSent.length > 0 && (
+                    <div className="panel">
+                        <h4 className="section-heading">Sent</h4>
+                        <div className="post-container">
+                            {invitesSent.map(duel => (
+                                <div className="post-header">
+                                    <div className="post-header__identity">
+                                        <div className="avatar-circle avatar-circle--sm">🧑‍💻</div>
+                                        <span className="post-author">Waiting for {duel.Opponent?.username}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </>
+        );
+    }
+
+    // variant === 'main': the challenge form + history, for the middle column
     return (
         <div className="duel-board">
             {errorMessage && <p className="error-text">{errorMessage}</p>}
@@ -167,97 +260,6 @@ const DuelBoard = () => {
             </div>
 
             <div>
-                <h4 className="section-heading">Pending Invites Received</h4>
-                {invitesReceived.length > 0 ? (
-                    <div className="posts-container">
-                        {invitesReceived.map(duel => (
-                            <div key={duel.id} className="panel post-card post-card--collab">
-                                <div className="post-header">
-                                    <div className="post-header__identity">
-                                        <div className="avatar-circle avatar-circle--sm">🧑‍💻</div>
-                                        <span className="post-author">{duel.Challenger?.username} challenged you</span>
-                                    </div>
-                                    <div className="post-header__badges">
-                                        <span className="lang-chip">{duel.language}</span>
-                                        <span className="discover-card__meta">{duel.question_count} questions</span>
-                                    </div>
-                                </div>
-                                <div className="post-footer card-actions-row">
-                                    <button
-                                        className="btn btn-primary btn-sm"
-                                        disabled={respondingId === duel.id}
-                                        onClick={() => handleRespond(duel.id, true)}
-                                    >
-                                        Accept
-                                    </button>
-                                    <button
-                                        className="btn btn-outline btn-sm"
-                                        disabled={respondingId === duel.id}
-                                        onClick={() => handleRespond(duel.id, false)}
-                                    >
-                                        Decline
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="empty-state">No pending invites.</p>
-                )}
-            </div>
-
-            {invitesSent.length > 0 && (
-                <div>
-                    <h4 className="section-heading">Invites Sent</h4>
-                    <div className="posts-container">
-                        {invitesSent.map(duel => (
-                            <div key={duel.id} className="panel post-card post-card--collab">
-                                <div className="post-header">
-                                    <div className="post-header__identity">
-                                        <div className="avatar-circle avatar-circle--sm">🧑‍💻</div>
-                                        <span className="post-author">Waiting for {duel.Opponent?.username}</span>
-                                    </div>
-                                    <div className="post-header__badges">
-                                        <span className="lang-chip">{duel.language}</span>
-                                        <span className="discover-card__meta">{duel.question_count} questions</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            <div>
-                <h4 className="section-heading">Active Duels</h4>
-                {activeDuels.length > 0 ? (
-                    <div className="posts-container">
-                        {activeDuels.map(duel => (
-                            <Link key={duel.id} to={`/duel/${duel.id}`} className="panel post-card post-card--collab post-card--clickable">
-                                <div className="post-header">
-                                    <div className="post-header__identity">
-                                        <div className="avatar-circle avatar-circle--sm">🧑‍💻</div>
-                                        <span className="post-author">
-                                            {duel.Challenger?.username} vs {duel.Opponent?.username}
-                                        </span>
-                                    </div>
-                                    <div className="post-header__badges">
-                                        <span className="lang-chip">{duel.language}</span>
-                                        <span className="category-chip category-chip--active">ACTIVE</span>
-                                    </div>
-                                </div>
-                                <div className="post-body">
-                                    <p className="discover-card__meta">{duel.question_count} questions</p>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="empty-state">No active duels.</p>
-                )}
-            </div>
-
-            <div>
                 <h4 className="section-heading">History</h4>
                 {history.length > 0 ? (
                     <div className="posts-container">
@@ -268,20 +270,13 @@ const DuelBoard = () => {
                                         <div className="avatar-circle avatar-circle--sm">🧑‍💻</div>
                                         <span className="post-author">
                                             {duel.Challenger?.username} vs {duel.Opponent?.username}
-                                        </span>
-                                    </div>
-                                    <div className="post-header__badges">
-                                        <span className={`category-chip category-chip--${duel.status.toLowerCase()}`}>
-                                            {duel.status}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="post-body">
-                                    <p className="discover-card__meta">
+                                        </span >
+                                        <p className="discover-card__meta">
                                         {duel.status === 'COMPLETED'
-                                            ? `🏆 ${duel.Winner?.username || 'TBD'} won`
+                                            ? `🏆 ${duel.Winner?.username || 'Both'} won`
                                             : 'Declined'}
-                                    </p>
+                                        </p>
+                                    </div>
                                 </div>
                             </Link>
                         ))}
