@@ -60,14 +60,11 @@ exports.getProfile = async (req, res) => {
                     model: CompetitionSubmission,
                     separate: true,
                     include: [{ model: Competition, attributes: ['id', 'title', 'language'] }]
-                },
-                // NOTE: belongsToMany associations (like these two) do NOT
-                // support separate:true in this Sequelize version — only
-                // hasMany does. Leaving separate off here is intentional,
-                // not an oversight; adding it back will 500 the whole route.
-                { model: User, as: 'Followers', attributes: ['id', 'username', 'profile_picture'], through: { attributes: [] } },
-                { model: User, as: 'Following', attributes: ['id', 'username', 'profile_picture'], through: { attributes: [] } }
-            ]
+                }
+            ],
+            
+            // Properly order the included posts from newest to oldest
+            order: [[Post, 'createdAt', 'DESC']]
         });
 
         if (!user) {
