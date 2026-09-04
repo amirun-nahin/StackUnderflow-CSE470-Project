@@ -47,7 +47,7 @@ const Milestones = () => {
                 &larr; Back
             </button>
 
-            <h1 className="discover-heading">Milestones & Awards</h1>
+            <h1 className="discover-heading">Progress</h1>
 
             {errorMessage && <p className="error-text">{errorMessage}</p>}
 

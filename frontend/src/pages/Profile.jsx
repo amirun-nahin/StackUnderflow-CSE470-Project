@@ -384,7 +384,7 @@ const Profile = () => {
                     </form>
                 )}
             </div>
-            <h3 className="profile-activity-heading">
+            {/* <h3 className="profile-activity-heading">
                 Bounty Activity
             </h3>
             <div className="posts-container">
@@ -416,7 +416,7 @@ const Profile = () => {
                 ) : (
                     <p className="empty-state">No bounty activity yet.</p>
                 )}
-            </div>
+            </div> */}
             <h3 className="profile-activity-heading">
                 Recent Activity
             </h3>

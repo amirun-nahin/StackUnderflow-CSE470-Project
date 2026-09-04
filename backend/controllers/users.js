@@ -60,7 +60,11 @@ exports.getProfile = async (req, res) => {
                     model: CompetitionSubmission,
                     separate: true,
                     include: [{ model: Competition, attributes: ['id', 'title', 'language'] }]
-                }]
+                },
+
+                { model: User, as: 'Followers', attributes: ['id', 'username', 'profile_picture'], through: { attributes: [] } },
+                { model: User, as: 'Following', attributes: ['id', 'username', 'profile_picture'], through: { attributes: [] } }
+            ]
         });
 
         if (!user) {
