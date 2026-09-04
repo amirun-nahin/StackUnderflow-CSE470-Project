@@ -685,3 +685,36 @@ exports.sweepExpiredDuels = async function sweepExpiredDuels() {
         }
     }
 };
+
+// ---------------------------------------------------------------
+// GET /api/duel/stats — stats box shown on the 1v1 Duel tab.
+// "Active"/"Completed" are platform-wide; "Played by Me"/"Won by Me"
+// are specific to the logged-in user (completed duels only — a duel
+// still in progress hasn't been "played" to a result yet).
+// ---------------------------------------------------------------
+exports.getStats = async (req, res) => {
+    try {
+        const activeCount = await Duel.count({ where: { status: 'ACTIVE' } });
+        const completedCount = await Duel.count({ where: { status: 'COMPLETED' } });
+
+        const myPlayedCount = await Duel.count({
+            where: {
+                status: 'COMPLETED',
+                [Op.or]: [{ ChallengerId: req.user.id }, { OpponentId: req.user.id }]
+            }
+        });
+        const myWonCount = await Duel.count({
+            where: { status: 'COMPLETED', WinnerId: req.user.id }
+        });
+
+        res.json({
+            active: activeCount,
+            completed: completedCount,
+            myPlayed: myPlayedCount,
+            myWon: myWonCount
+        });
+    } catch (error) {
+        console.error('Error fetching duel stats:', error);
+        res.status(500).json({ error: 'Failed to fetch duel stats' });
+    }
+};

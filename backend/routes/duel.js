@@ -7,6 +7,7 @@ router.post('/invite', validateToken, duelController.sendInvite);
 router.post('/:duelId/respond', validateToken, duelController.respondToInvite);
 router.get('/mine', validateToken, duelController.getMyDuels);
 router.get('/invites/pending', validateToken, duelController.getPendingInvites);
+router.get('/stats', validateToken, duelController.getStats);
 router.get('/:duelId/state', validateToken, duelController.getDuelState);
 router.post('/:duelId/answer', validateToken, duelController.submitAnswer);
 
