@@ -8,6 +8,13 @@ const FEATURES = [
 
 const TEMPLATES = ['MINIMAL', 'MODERN', 'CLASSIC'];
 const ITEM_TYPES = ['PROJECT', 'SKILL', 'ACHIEVEMENT', 'EXPERIENCE', 'CUSTOM'];
+const CARD_META = {
+    EXPERIENCE: { title: 'Experience', icon: '💼' },
+    SKILL: { title: 'Skills', icon: '⚡' },
+    ACHIEVEMENT: { title: 'Achievements', icon: '🏆' },
+    PROJECT: { title: 'Projects', icon: '📁' },
+    CUSTOM: { title: 'More', icon: '✦' }
+};
 const ASSISTANT_MODES = [
     { key: 'EXPLAIN', label: 'Explain Code' },
     { key: 'REVIEW', label: 'Review Code' },
@@ -209,6 +216,13 @@ const Extra = () => {
     const templateClass = `portfolio-view--${(portfolio?.template || 'MINIMAL').toLowerCase()}`;
     const pdfUrl = `http://localhost:3001/api/portfolio/${myUsername}/pdf?template=${portfolio?.template || 'MINIMAL'}`;
 
+    // Group flat PortfolioItems into one bucket per type, so each type
+    // renders as its own editorial "page" instead of one flat grid.
+    const groupedItems = (portfolio?.PortfolioItems || []).reduce((acc, item) => {
+        if (!acc[item.type]) acc[item.type] = [];
+        acc[item.type].push(item);
+        return acc;
+    }, {});
     return (
         <div className="extra-layout">
             {/* LEFT: nav for extra features */}
@@ -235,39 +249,61 @@ const Extra = () => {
 
                 {activeFeature === 'portfolio' && (
                     <div className={`portfolio-view ${templateClass}`}>
-                        <div className="panel portfolio-headline-panel">
-                            <h1 className="discover-heading">My Portfolio</h1>
-                            {portfolio?.headline ? (
-                                <p className="portfolio-headline-text">{portfolio.headline}</p>
-                            ) : (
-                                <p className="empty-state">
-                                    No summary yet — write one from the panel on the right.
-                                </p>
-                            )}
-                        </div>
-                        
-                        <div className="portfolio-items-grid">
-                            {portfolio?.PortfolioItems?.length > 0 ? (
-                                portfolio.PortfolioItems.map((item) => (
-                                    <div key={item.id} className="panel portfolio-item-card">
-                                        <div className="portfolio-item-card__header">
-                                            <span className="repo-meta-chip">{item.type}</span>
-                                            <button
-                                                className="modal-close-btn"
-                                                onClick={() => handleRemoveItem(item.id)}
-                                                aria-label="Remove item"
-                                            >
-                                                ✕
-                                            </button>
+                        <div className="portfolio-cards">
+                            {/* Cover card — always shown */}
+                            <div className="portfolio-card portfolio-card--cover">
+                                <span className="portfolio-card__kicker">Portfolio</span>
+                                <h1 className="portfolio-card__name">{myUsername}</h1>
+                                {portfolio?.headline ? (
+                                    <p className="portfolio-card__headline">{portfolio.headline}</p>
+                                ) : (
+                                    <p className="portfolio-card__headline portfolio-card__headline--muted">
+                                        No summary yet — write one from the panel on the right.
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* One card per item type that actually has entries */}
+                            {Object.keys(CARD_META).map((type) => {
+                                const items = groupedItems[type];
+                                if (!items || items.length === 0) return null;
+                                const meta = CARD_META[type];
+                                return (
+                                    <div key={type} className={`portfolio-card portfolio-card--${type}`}>
+                                        <div className="portfolio-card__title">
+                                            <span className="portfolio-card__icon">{meta.icon}</span>
+                                            <h3>{meta.title}</h3>
                                         </div>
-                                        <h4>{item.title}</h4>
-                                        {item.description && <p className="post-text">{item.description}</p>}
+                                        <div className="portfolio-card__divider" />
+                                        <ul className="portfolio-card__list">
+                                            {items.map((item) => (
+                                                <li key={item.id} className="portfolio-card__list-item">
+                                                    <div>
+                                                        <span className="portfolio-card__item-title">{item.title}</span>
+                                                        {item.description && (
+                                                            <p className="portfolio-card__item-desc">{item.description}</p>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        className="modal-close-btn"
+                                                        onClick={() => handleRemoveItem(item.id)}
+                                                        aria-label="Remove item"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
-                                ))
-                            ) : (
-                                <p className="empty-state">
-                                    Your portfolio is empty. Add your first item from the panel on the right.
-                                </p>
+                                );
+                            })}
+
+                            {(!portfolio?.PortfolioItems || portfolio.PortfolioItems.length === 0) && (
+                                <div className="portfolio-card">
+                                    <p className="empty-state">
+                                        Your portfolio is empty. Add your first item from the panel on the right.
+                                    </p>
+                                </div>
                             )}
                         </div>
                     </div>
