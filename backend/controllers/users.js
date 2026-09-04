@@ -60,11 +60,7 @@ exports.getProfile = async (req, res) => {
                     model: CompetitionSubmission,
                     separate: true,
                     include: [{ model: Competition, attributes: ['id', 'title', 'language'] }]
-                }
-            ],
-            
-            // Properly order the included posts from newest to oldest
-            order: [[Post, 'createdAt', 'DESC']]
+                }]
         });
 
         if (!user) {
