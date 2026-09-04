@@ -2123,6 +2123,31 @@ textarea {
   padding: var(--space-5);
 }
 
+/* Micro-Bounty stats box — same panel/header language as the Daily Quiz
+   card, just a stat grid instead of a game. */
+.bounty-stats-panel {
+  padding: var(--space-5);
+}
+.bounty-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+.bounty-stats-grid__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.bounty-stats-grid__item .profile-stat__value {
+  font-size: var(--text-lg, 1.25rem);
+}
+
 .quiz-header {
   display: flex;
   justify-content: space-between;

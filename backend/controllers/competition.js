@@ -285,3 +285,36 @@ exports.getMySubmission = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch your submission' });
     }
 };
+
+// ---------------------------------------------------------------
+// GET /api/competition/stats — stats box shown on the Competition tab.
+// "Active"/"Completed" are platform-wide, computed from live phase
+// (start_time + duration_minutes), same rule getCompetitionDetail uses —
+// not a stored status field, since phase is always derived, never stale.
+// "Hosted by Me"/"Submitted by Me" are specific to the logged-in user.
+// ---------------------------------------------------------------
+exports.getStats = async (req, res) => {
+    try {
+        const allCompetitions = await Competition.findAll();
+        let activeCount = 0;
+        let completedCount = 0;
+        for (const c of allCompetitions) {
+            const phase = getPhase(c);
+            if (phase === 'ACTIVE') activeCount++;
+            else if (phase === 'CLOSED') completedCount++;
+        }
+
+        const myHostedCount = await Competition.count({ where: { UserId: req.user.id } });
+        const mySubmittedCount = await CompetitionSubmission.count({ where: { UserId: req.user.id } });
+
+        res.json({
+            active: activeCount,
+            completed: completedCount,
+            myHosted: myHostedCount,
+            mySubmitted: mySubmittedCount
+        });
+    } catch (error) {
+        console.error('Error fetching competition stats:', error);
+        res.status(500).json({ error: 'Failed to fetch competition stats' });
+    }
+};
