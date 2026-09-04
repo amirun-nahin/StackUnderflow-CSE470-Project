@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const CreatePost = ({ onPostCreated }) => {
   const [text, setText] = useState('');
@@ -12,6 +12,61 @@ const CreatePost = ({ onPostCreated }) => {
   const [peopleNeeded, setPeopleNeeded] = useState('');
 //  const isBounty = category === 'MICRO_BOUNTY';
   const isRepoRequest = category === 'REPO_REQUEST';
+
+  // --- GitHub repo picker (for REPO_REQUEST posts) ---
+  const [availableRepos, setAvailableRepos] = useState([]);
+  const [reposLoading, setReposLoading] = useState(false);
+  const [reposError, setReposError] = useState(null); // 'not_connected' | 'fetch_failed' | null
+  const [reposFetched, setReposFetched] = useState(false);
+  const [repoMode, setRepoMode] = useState('select'); // 'select' | 'custom'
+
+  useEffect(() => {
+    if (!isRepoRequest || reposFetched) return;
+
+    const fetchRepos = async () => {
+      setReposLoading(true);
+      setReposError(null);
+      const token = localStorage.getItem('accessToken');
+
+      try {
+        const response = await fetch('http://localhost:3001/api/github/repositories', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.status === 400) {
+          // Not connected — fall back to manual entry
+          setReposError('not_connected');
+          setRepoMode('custom');
+        } else if (!response.ok) {
+          setReposError('fetch_failed');
+          setRepoMode('custom');
+        } else {
+          const repos = await response.json();
+          setAvailableRepos(repos);
+          setRepoMode(repos.length > 0 ? 'select' : 'custom');
+        }
+      } catch (error) {
+        console.error('Error fetching GitHub repositories:', error);
+        setReposError('fetch_failed');
+        setRepoMode('custom');
+      } finally {
+        setReposLoading(false);
+        setReposFetched(true);
+      }
+    };
+
+    fetchRepos();
+  }, [isRepoRequest, reposFetched]);
+
+  const handleRepoSelectChange = (e) => {
+    const value = e.target.value;
+    if (value === '__custom__') {
+      setRepoMode('custom');
+      setRepoName('');
+    } else {
+      setRepoName(value);
+    }
+  };
   
 
   const handleSubmit = async (e) => {
@@ -51,6 +106,9 @@ const CreatePost = ({ onPostCreated }) => {
 //      setBountyDeadline('');
       setRepoName('');
       setPeopleNeeded('');
+      setRepoMode('select');
+      setReposFetched(false);
+      setAvailableRepos([]);
     } catch (error) {
       console.error("Error creating post:", error);
     }
@@ -91,14 +149,57 @@ const CreatePost = ({ onPostCreated }) => {
           <div className="create-post-selects">
             <div className="input-group">
               <label>Repository Name</label>
-              <input
-                type="text"
-                className="select-input"
-                placeholder="e.g. octocat/hello-world"
-                value={repoName}
-                onChange={(e) => setRepoName(e.target.value)}
-                required
-              />
+
+              {repoMode === 'select' ? (
+                <>
+                  <select
+                    className="select-input"
+                    value={repoName}
+                    onChange={handleRepoSelectChange}
+                    required
+                  >
+                    <option value="" disabled>
+                      {reposLoading ? 'Loading your repositories...' : 'Select a repository'}
+                    </option>
+                    {availableRepos.map((repo) => (
+                      <option key={repo.id} value={repo.full_name}>
+                        {repo.full_name}{repo.private ? ' (private)' : ''}
+                      </option>
+                    ))}
+                    <option value="__custom__">Other (type manually)</option>
+                  </select>
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    className="select-input"
+                    placeholder="e.g. octocat/hello-world"
+                    value={repoName}
+                    onChange={(e) => setRepoName(e.target.value)}
+                    required
+                  />
+                  {reposError === 'not_connected' && (
+                    <label>
+                      GitHub account Not connected.
+                    </label>
+                  )}
+                  {reposError === 'fetch_failed' && (
+                    <label>
+                      Couldn't load your repositories — enter the name manually.
+                    </label>
+                  )}
+                  {!reposError && availableRepos.length > 0 && (
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      onClick={() => { setRepoMode('select'); setRepoName(''); }}
+                    >
+                      Choose from my repos instead
+                    </button>
+                  )}
+                </>
+              )}
             </div>
             <div className="input-group">
               <label>People Needed</label>
