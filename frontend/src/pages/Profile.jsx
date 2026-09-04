@@ -252,16 +252,6 @@ const Profile = () => {
                         {isFollowing ? 'Unfollow' : 'Follow'}
                     </button>
                 )}
-                {isMyProfile && (
-                    <Link to="/milestones" className="milestone-cta-btn">
-                        <span className="milestone-cta-btnicon">🏆</span>
-                        <span className="milestone-cta-btntext">
-                            <strong>Milestones & Awards</strong>
-                            <span>Track your progress and achievements</span>
-                        </span>
-                        <span className="milestone-cta-btn__arrow">→</span>
-                    </Link>
-                )}
             </div>
 
             <div className="profile-body panel">

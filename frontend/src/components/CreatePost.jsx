@@ -69,8 +69,6 @@ const CreatePost = ({ onPostCreated }) => {
             >
               <option value="NORMAL">Standard Post</option>
               <option value="PEER_REVIEW">Peer Review Request</option>
-              <option value="COLLAB_SLOT">Collaboration Slot</option>
-
               <option value="REPO_REQUEST">Repository Request</option>
             </select>
 

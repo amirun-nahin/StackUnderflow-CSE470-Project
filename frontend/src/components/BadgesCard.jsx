@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 const MAX_PINNED = 4;
 
@@ -102,9 +103,14 @@ const BadgesCard = ({ username, isMyProfile }) => {
             )}
 
             {isMyProfile && (
-                <button className="btn btn-outline btn-sm badges-card__edit-btn" onClick={openEditor}>
-                    Edit Badges
-                </button>
+                <div className="badges-card__actions">
+                    <Link to="/milestones" className="btn btn-outline btn-sm badges-card__edit-btn">
+                        Milestones
+                    </Link>
+                    <button className="btn btn-outline btn-sm badges-card__edit-btn" onClick={openEditor}>
+                        Edit Badges
+                    </button>
+                </div>
             )}
 
             {editing && (

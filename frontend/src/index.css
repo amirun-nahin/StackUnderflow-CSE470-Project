@@ -436,6 +436,10 @@ textarea {
   border-style: solid;
   background-color: var(--color-surface-alt, var(--color-surface));
 }
+.badges-card__actions {
+    display: flex;
+    gap: 8px;
+}
 .badges-card__edit-btn {
   width: 100%;
 }
