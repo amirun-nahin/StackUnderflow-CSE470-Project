@@ -477,7 +477,7 @@ const seedDatabase = async () => {
         for (const postId of repoRequestPostIds) {
             const post = insertedPosts.find(p => p.id === postId);
             const repoGroup = await Group.create({
-                name: `${post.repo_name} contributors`,
+                name: `${repo.name} contributors (${repo.id})`,
                 description: `Private collaboration space for the "${post.repo_name}" repository request.`,
                 is_private: true
             });
