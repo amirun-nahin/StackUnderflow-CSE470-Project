@@ -9,6 +9,7 @@ const Competition = require('../models/Competition');
 const Vote = require('../models/Vote');
 const Comment = require('../models/Comment');
 const CompetitionSubmission = require('../models/CompetitionSubmission');
+const Notification = require('../models/Notification');
 
 // Get all the users (for discover page)
 exports.getAllUsers = async (req, res) => {
@@ -33,6 +34,8 @@ exports.getProfile = async (req, res) => {
             include: [
                 { 
                     model: Post , 
+                    separate: true,
+                    order: [['createdAt', 'DESC']],
                     include: [
                         {model: Vote}, {model: Comment}, 
                         {model: RepoRequestJoin, 
@@ -40,26 +43,24 @@ exports.getProfile = async (req, res) => {
                 },
                 {
                     model: BountyEnrollment,
+                    separate: true,
                     include: [{ model: Post, attributes: ['id', 'text_content', 'category', 'bounty_status'] }]
                 },
                 {
                     model: BountySubmission,
+                    separate: true,
                     include: [{ model: Post, attributes: ['id', 'text_content'] }]
                 },
                 {
                     model: Competition,
+                    separate: true,
                     attributes: ['id', 'title', 'language', 'start_time', 'duration_minutes']
                 },
                 {
                     model: CompetitionSubmission,
+                    separate: true,
                     include: [{ model: Competition, attributes: ['id', 'title', 'language'] }]
-                },
-                { model: User, as: 'Followers', attributes: ['id', 'username', 'profile_picture'] },
-                { model: User, as: 'Following', attributes: ['id', 'username', 'profile_picture'] }
-            ],
-            
-            // Properly order the included posts from newest to oldest
-            order: [[Post, 'createdAt', 'DESC']]
+                }]
         });
 
         if (!user) {
@@ -138,6 +139,12 @@ exports.toggleFollow = async (req, res) => {
         } else {
             // Follow
             await currentUser.addFollowing(targetUser);
+            await Notification.create({
+                type: 'NEW_FOLLOWER',
+                message: `${currentUser.username} started following you.`,
+                link: `/profile/${currentUser.username}`,
+                UserId: targetUser.id
+            });
             res.json({ message: 'Followed successfully', isFollowing: true });
         }
     } catch (error) {

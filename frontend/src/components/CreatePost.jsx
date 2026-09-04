@@ -6,11 +6,11 @@ const CreatePost = ({ onPostCreated }) => {
   const [category, setCategory] = useState('NORMAL');
   const [language, setLanguage] = useState('General'); // <-- NEW STATE
   const [showCodeInput, setShowCodeInput] = useState(false);
-  const [bountyRewardPoints, setBountyRewardPoints] = useState('');   // ADD
-  const [bountyDeadline, setBountyDeadline] = useState(''); 
+  // const [bountyRewardPoints, setBountyRewardPoints] = useState('');   // ADD
+  // const [bountyDeadline, setBountyDeadline] = useState(''); 
   const [repoName, setRepoName] = useState('');
   const [peopleNeeded, setPeopleNeeded] = useState('');
-  const isBounty = category === 'MICRO_BOUNTY';
+//  const isBounty = category === 'MICRO_BOUNTY';
   const isRepoRequest = category === 'REPO_REQUEST';
   
 
@@ -30,8 +30,8 @@ const CreatePost = ({ onPostCreated }) => {
           code_snippet: showCodeInput ? code : null,
           category: category,
           language: language, // <-- SENDING TO BACKEND
-          ...(isBounty && bountyRewardPoints ? { bounty_reward_points: Number(bountyRewardPoints) } : {}),
-          ...(isBounty && bountyDeadline ? { bounty_deadline: bountyDeadline } : {}),
+//          ...(isBounty && bountyRewardPoints ? { bounty_reward_points: Number(bountyRewardPoints) } : {}),
+//          ...(isBounty && bountyDeadline ? { bounty_deadline: bountyDeadline } : {}),
           ...(isRepoRequest ? { repo_name: repoName, people_needed: Number(peopleNeeded) } : {})
         })
       });
@@ -47,8 +47,8 @@ const CreatePost = ({ onPostCreated }) => {
       setShowCodeInput(false);
       setCategory('NORMAL');
       setLanguage('General');
-      setBountyRewardPoints('');
-      setBountyDeadline('');
+//      setBountyRewardPoints('');
+//      setBountyDeadline('');
       setRepoName('');
       setPeopleNeeded('');
     } catch (error) {
@@ -70,7 +70,7 @@ const CreatePost = ({ onPostCreated }) => {
               <option value="NORMAL">Standard Post</option>
               <option value="PEER_REVIEW">Peer Review Request</option>
               <option value="COLLAB_SLOT">Collaboration Slot</option>
-              <option value="MICRO_BOUNTY">Micro-Bounty</option>
+
               <option value="REPO_REQUEST">Repository Request</option>
             </select>
 
@@ -88,30 +88,7 @@ const CreatePost = ({ onPostCreated }) => {
               <option value="SQL">SQL</option>
             </select>
         </div>
-        {isBounty && (
-          <div className="create-post-selects">
-            <div className="input-group">
-              <label>Reward Points</label>
-              <input
-                type="number"
-                min="0"
-                className="select-input"
-                placeholder="e.g. 100"
-                value={bountyRewardPoints}
-                onChange={(e) => setBountyRewardPoints(e.target.value)}
-              />
-            </div>
-            <div className="input-group">
-              <label>Deadline</label>
-              <input
-                type="date"
-                className="select-input"
-                value={bountyDeadline}
-                onChange={(e) => setBountyDeadline(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
+
         {isRepoRequest && (
           <div className="create-post-selects">
             <div className="input-group">
@@ -141,9 +118,7 @@ const CreatePost = ({ onPostCreated }) => {
         )}
         <textarea
           className="post-textarea"
-          placeholder={isBounty ? "Describe the bounty challenge..." : isRepoRequest ? "Briefly describe what you need help with..." : "What is the challenge?"}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
+          placeholder={isRepoRequest ? "Briefly describe what you need help with..." : "What is the challenge?"}
           required
         />
 

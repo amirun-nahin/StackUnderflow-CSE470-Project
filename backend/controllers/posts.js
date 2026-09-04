@@ -6,6 +6,7 @@ const RepoRequestJoin = require('../models/RepoRequestJoin');
 const Group = require('../models/Group');
 const GroupMember = require('../models/GroupMember');
 const CodeComment = require('../models/CodeComment');
+const { Op } = require('sequelize');
 
 // Feed Routes
 // Get Global Feed
@@ -16,7 +17,7 @@ exports.getFeed = async (req, res) => {
         const offset = (page - 1) * limit;
 
         const posts = await Post.findAll({
-            where: {GroupId: null},
+            where: { GroupId: null, category: { [Op.ne]: 'MICRO_BOUNTY' } },
             limit: limit,
             offset: offset,
             order: [['createdAt', 'DESC']],
@@ -60,7 +61,7 @@ exports.getFollowingFeed = async (req, res) => {
         }
 
         const posts = await Post.findAll({
-            where: { UserId: followingIds , GroupId: null},
+            where: { UserId: followingIds, GroupId: null, category: { [Op.ne]: 'MICRO_BOUNTY' } },
             limit: limit,
             offset: offset,
             order: [['createdAt', 'DESC']],
