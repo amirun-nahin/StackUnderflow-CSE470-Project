@@ -2,6 +2,7 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const BountyEnrollment = require('../models/BountyEnrollment');
 const BountySubmission = require('../models/BountySubmission');
+const { Op } = require('sequelize');
 
 // Small helper so every route consistently rejects non-bounty posts
 async function getBountyPostOr404(postId, res) {
@@ -249,5 +250,62 @@ exports.reviewSubmission = async (req, res) => {
     } catch (error) {
         console.error('Error reviewing submission:', error);
         res.status(500).json({ error: 'Failed to review submission' });
+    }
+};
+
+// ---------------------------------------------------------------
+// GET /api/bounty/stats — the stats box shown on the Micro-Bounty tab.
+// "Active"/"Completed" are platform-wide counts; "I posted"/"I enrolled"
+// are specific to the logged-in user.
+//
+// Note: Post.bounty_status is never actually flipped to 'CLOSED' anywhere
+// in the app (it just sits at its 'OPEN' default forever), so "completed"
+// here is defined by real activity instead: a bounty counts as completed
+// once at least one of its enrollments has been reviewed (status COMPLETED).
+// ---------------------------------------------------------------
+exports.getStats = async (req, res) => {
+    try {
+        const now = new Date();
+
+        const activeCount = await Post.count({
+            where: {
+                category: 'MICRO_BOUNTY',
+                bounty_status: 'OPEN',
+                [Op.or]: [
+                    { bounty_deadline: null },
+                    { bounty_deadline: { [Op.gte]: now } }
+                ]
+            }
+        });
+
+        // "Completed" here means a bounty that's actually received a
+        // submission — reviewed or not. Rename note: this counts bounties
+        // with submitted work, not necessarily ones a host has judged yet.
+        const completedCount = await Post.count({
+            where: { category: 'MICRO_BOUNTY' },
+            include: [{
+                model: BountySubmission,
+                required: true
+            }],
+            distinct: true
+        });
+
+        const myPostedCount = await Post.count({
+            where: { UserId: req.user.id, category: 'MICRO_BOUNTY' }
+        });
+
+        const myEnrolledCount = await BountyEnrollment.count({
+            where: { UserId: req.user.id }
+        });
+
+        res.json({
+            active: activeCount,
+            completed: completedCount,
+            myPosted: myPostedCount,
+            myEnrolled: myEnrolledCount
+        });
+    } catch (error) {
+        console.error('Error fetching bounty stats:', error);
+        res.status(500).json({ error: 'Failed to fetch bounty stats' });
     }
 };

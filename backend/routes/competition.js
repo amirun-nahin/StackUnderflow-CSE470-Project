@@ -5,6 +5,7 @@ const { validateToken } = require('../middlewares/AuthMiddleware');
 
 router.post('/create', validateToken, competitionController.createCompetition);
 router.get('/board', competitionController.getBoard);
+router.get('/stats', validateToken, competitionController.getStats);
 router.get('/:competitionId', validateToken, competitionController.getCompetitionDetail);
 router.post('/:competitionId/submit', validateToken, competitionController.submitSolution);
 router.get('/:competitionId/submissions', validateToken, competitionController.getSubmissions);

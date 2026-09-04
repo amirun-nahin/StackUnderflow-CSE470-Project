@@ -119,6 +119,8 @@ const CreatePost = ({ onPostCreated }) => {
         <textarea
           className="post-textarea"
           placeholder={isRepoRequest ? "Briefly describe what you need help with..." : "What is the challenge?"}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
           required
         />
 

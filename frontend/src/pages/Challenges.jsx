@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import BountyBoard from '../components/BountyBoard';
+import BountyStats from '../components/BountyStats';
+import CompetitionStats from '../components/CompetitionStats';
+import DuelStats from '../components/DuelStats';
 import CompetitionBoard from '../components/CompetitionBoard';
 import DuelBoard from '../components/DuelBoard';
 
@@ -119,13 +122,12 @@ const Challenges = () => {
                                         value={bountyDeadline}
                                         onChange={(e) => setBountyDeadline(e.target.value)}
                                     />
-                                </div>
-                                {bountyError && <p className="error-text">{bountyError}</p>}
-                                <div className="create-post-actions">
+                                
                                     <button type="submit" className="btn btn-primary" disabled={postingBounty}>
                                         {postingBounty ? 'Posting...' : 'Post Bounty'}
                                     </button>
                                 </div>
+                                {bountyError && <p className="error-text">{bountyError}</p>}
                             </form>
                         </div>
 
@@ -152,9 +154,16 @@ const Challenges = () => {
                 )}
             </main>
 
-            {/* RIGHT: duel activity only — bounty/competition reserved for future options */}
+            {/* RIGHT: activity + stats for whichever tab is active */}
             <aside className="extra-options">
-                {activeTab === 'duel' && <DuelBoard variant="sidebar" />}
+                {activeTab === 'duel' && (
+                    <>
+                        <DuelStats />
+                        <DuelBoard variant="sidebar" />
+                    </>
+                )}
+                {activeTab === 'bounty' && <BountyStats refreshKey={bountyRefreshKey} />}
+                {activeTab === 'competition' && <CompetitionStats />}
             </aside>
         </div>
     );
