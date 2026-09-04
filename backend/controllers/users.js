@@ -53,7 +53,9 @@ exports.getProfile = async (req, res) => {
                 {
                     model: CompetitionSubmission,
                     include: [{ model: Competition, attributes: ['id', 'title', 'language'] }]
-                }
+                },
+                { model: User, as: 'Followers', attributes: ['id', 'username', 'profile_picture'] },
+                { model: User, as: 'Following', attributes: ['id', 'username', 'profile_picture'] }
             ],
             
             // Properly order the included posts from newest to oldest
